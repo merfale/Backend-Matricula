@@ -33,4 +33,14 @@ public class RolController {
         rolRepository.save(rol);
         return ResponseEntity.ok().build();
     }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<?> editar(@PathVariable Integer id, @RequestBody Rol request) {
+        return rolRepository.findById(id)
+                .map(existente -> {
+                    existente.setNombreRol(request.getNombreRol());
+                    return ResponseEntity.ok(rolRepository.save(existente));
+                })
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
 }

@@ -3,6 +3,7 @@ package com.depazsotelo.matricula.controllers;
 import com.depazsotelo.matricula.models.Funcionalidad;
 import com.depazsotelo.matricula.repositories.FuncionalidadRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
@@ -28,5 +29,34 @@ public class FuncionalidadController {
     @PostMapping
     public Funcionalidad crear(@RequestBody Funcionalidad funcionalidad) {
         return funcionalidadRepository.save(funcionalidad);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<?> obtener(@PathVariable Integer id) {
+        return funcionalidadRepository.findById(id)
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<?> editar(@PathVariable Integer id, @RequestBody Funcionalidad request) {
+        return funcionalidadRepository.findById(id)
+                .map(existente -> {
+                    existente.setNombre(request.getNombre());
+                    existente.setIcono(request.getIcono());
+                    existente.setPadre(request.getPadre());
+                    return ResponseEntity.ok(funcionalidadRepository.save(existente));
+                })
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    // Eliminación física: no hay campo "estado" en este modelo (ver nota arriba)
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> eliminar(@PathVariable Integer id) {
+        if (!funcionalidadRepository.existsById(id)) {
+            return ResponseEntity.notFound().build();
+        }
+        funcionalidadRepository.deleteById(id);
+        return ResponseEntity.ok().build();
     }
 }

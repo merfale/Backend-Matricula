@@ -58,4 +58,29 @@ public class UsuarioController {
         usuarioRepository.save(usuario);
         return ResponseEntity.ok().build();
     }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<?> obtener(@PathVariable Integer id) {
+        return usuarioRepository.findById(id)
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    // MEJORA: edita usuario/rol; el cambio de password sigue yendo por su propio endpoint (CambiarPasswordRequest)
+    @PutMapping("/{id}")
+    public ResponseEntity<?> editar(@PathVariable Integer id, @RequestBody CrearUsuarioRequest request) {
+        return usuarioRepository.findById(id)
+                .map(existente -> {
+                    if ("SUPERUSUARIO".equalsIgnoreCase(existente.getRol().getNombreRol())
+                            && !existente.getRol().getIdRol().equals(request.getIdRol())) {
+                        return ResponseEntity.badRequest().body("No se puede cambiar el rol del Superusuario.");
+                    }
+                    Rol rol = rolRepository.findById(request.getIdRol())
+                            .orElseThrow(() -> new RuntimeException("Rol no encontrado"));
+                    existente.setUsuario(request.getUsuario());
+                    existente.setRol(rol);
+                    return ResponseEntity.ok(usuarioRepository.save(existente));
+                })
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
 }

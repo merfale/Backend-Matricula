@@ -24,6 +24,7 @@ public class Alumno {
     @Column(length = 255, nullable = false)
     private String numeroDocumento;
 
+
     @Column(length = 80, nullable = false)
     private String nombres;
 

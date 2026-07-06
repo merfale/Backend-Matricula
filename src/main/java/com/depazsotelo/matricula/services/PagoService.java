@@ -34,7 +34,7 @@ public class PagoService {
         if (tieneDeudasAnteriores) {
             throw new Exception("No se puede pagar esta cuota. Existen cuotas anteriores pendientes de pago.");
         }
-        
+
         cuota.setEstado("PAGADO");
         cuota.setFechaPago(LocalDateTime.now());
         cuota.setRecibo("BOL-2026-" + String.format("%04d", cuota.getCodCuota())); // Autogenera un recibo

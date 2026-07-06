@@ -7,20 +7,21 @@ import java.time.LocalDateTime;
 
 @Data
 @Entity
-@Table(name = "alumno")
+@Table(name = "alumno", uniqueConstraints = {
+        @UniqueConstraint(columnNames = {"cod_tipo_documento", "numero_documento"})
+})
 public class Alumno {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer codAlumno; // PK
+    private Integer codAlumno;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "cod_tipo_documento", nullable = false)
-    private TipoDocumento tipoDocumento; // FK
+    private TipoDocumento tipoDocumento;
 
-    // --- MAGIA CRIPTOGRÁFICA: Cifrado AES automático ---
     @Convert(converter = com.depazsotelo.matricula.security.AesEncryptor.class)
-    @Column(length = 255, unique = true, nullable = false)
+    @Column(length = 255, nullable = false)
     private String numeroDocumento;
 
     @Column(length = 80, nullable = false)

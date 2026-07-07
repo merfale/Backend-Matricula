@@ -13,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.security.access.prepost.PreAuthorize;
+import com.depazsotelo.matricula.services.ConceptoService;
 import java.util.List;
 
 @RestController
@@ -24,6 +25,7 @@ public class ConceptoController {
     private final AnioAcademicoRepository anioAcademicoRepository;
     private final TipoConceptoRepository tipoConceptoRepository;
     private final AuditoriaService auditoriaService;
+    private final ConceptoService conceptoService;
 
     @PreAuthorize("@permisoService.tienePermiso(authentication.name, 'Conceptos', 'ver')")
     @GetMapping
@@ -123,5 +125,26 @@ public class ConceptoController {
         concepto.setMonto(request.getMonto());
         concepto.setOrdenPago(request.getOrdenPago());
         concepto.setObligatorio(request.getObligatorio());
+    }
+
+    @PreAuthorize("@permisoService.tienePermiso(authentication.name, 'Conceptos', 'crear')")
+    @PostMapping("/clonar")
+    public ResponseEntity<?> clonar(@RequestParam Integer codAnioOrigen, @RequestParam Integer codAnioDestino,
+                                    Authentication authentication, HttpServletRequest httpRequest) {
+        try {
+            List<Concepto> clonados = conceptoService.clonarConceptos(codAnioOrigen, codAnioDestino);
+
+            auditoriaService.registrar(
+                    auditoriaService.usuarioDesdeAuth(authentication),
+                    "Conceptos", "concepto", "CLONAR", codAnioDestino,
+                    "{\"anioOrigen\":" + codAnioOrigen + "}",
+                    "{\"anioDestino\":" + codAnioDestino + ",\"cantidadClonada\":" + clonados.size() + "}",
+                    httpRequest
+            );
+
+            return ResponseEntity.ok(clonados);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 }

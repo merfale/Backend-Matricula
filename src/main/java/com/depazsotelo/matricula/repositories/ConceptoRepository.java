@@ -9,4 +9,5 @@ import java.util.List;
 public interface ConceptoRepository extends JpaRepository<Concepto, Integer> {
     // Esto buscará los conceptos (Matrícula, Marzo, etc.) de un año y los ordenará para generar las cuotas
     List<Concepto> findByAnioAcademicoCodAnioAcademicoOrderByOrdenPagoAsc(Integer codAnioAcademico);
+    List<Concepto> findByAnioAcademicoCodAnioAcademicoAndEstadoTrueOrderByOrdenPagoAsc(Integer codAnioAcademico);
 }

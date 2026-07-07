@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 import java.util.List;
 
 @RestController
@@ -18,16 +19,19 @@ public class FuncionalidadController {
     private final FuncionalidadRepository funcionalidadRepository;
     private final AuditoriaService auditoriaService;
 
+    @PreAuthorize("@permisoService.tienePermiso(authentication.name, 'Funcionalidades', 'ver')")
     @GetMapping("/raiz")
     public List<Funcionalidad> listarRaiz() {
         return funcionalidadRepository.findByPadreIsNull();
     }
 
+    @PreAuthorize("@permisoService.tienePermiso(authentication.name, 'Funcionalidades', 'ver')")
     @GetMapping
     public List<Funcionalidad> listarTodas() {
         return funcionalidadRepository.findAll();
     }
 
+    @PreAuthorize("@permisoService.tienePermiso(authentication.name, 'Funcionalidades', 'crear')")
     @PostMapping
     public Funcionalidad crear(@RequestBody Funcionalidad funcionalidad, Authentication authentication, HttpServletRequest request) {
         Funcionalidad guardada = funcionalidadRepository.save(funcionalidad);
@@ -43,14 +47,16 @@ public class FuncionalidadController {
         return guardada;
     }
 
-    @GetMapping("/{id}")
+    @PreAuthorize("@permisoService.tienePermiso(authentication.name, 'Funcionalidades', 'editar')")
+    @PutMapping("/{id}")
     public ResponseEntity<?> obtener(@PathVariable Integer id) {
         return funcionalidadRepository.findById(id)
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    @PutMapping("/{id}")
+    @PreAuthorize("@permisoService.tienePermiso(authentication.name, 'Funcionalidades', 'eliminar')")
+    @DeleteMapping("/{id}")
     public ResponseEntity<?> editar(@PathVariable Integer id, @RequestBody Funcionalidad request, Authentication authentication, HttpServletRequest httpRequest) {
         return funcionalidadRepository.findById(id)
                 .map(existente -> {

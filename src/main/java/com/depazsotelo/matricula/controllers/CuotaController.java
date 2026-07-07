@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 import java.math.BigDecimal;
 import java.util.List;
 
@@ -19,11 +20,13 @@ public class CuotaController {
     private final CuotaRepository cuotaRepository;
     private final AuditoriaService auditoriaService;
 
+    @PreAuthorize("@permisoService.tienePermiso(authentication.name, 'Cuotas', 'ver')")
     @GetMapping
     public List<Cuota> listar() {
         return cuotaRepository.findAll();
     }
 
+    @PreAuthorize("@permisoService.tienePermiso(authentication.name, 'Cuotas', 'ver')")
     @GetMapping("/{id}")
     public ResponseEntity<?> obtener(@PathVariable Integer id) {
         return cuotaRepository.findById(id)
@@ -31,6 +34,7 @@ public class CuotaController {
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
+    @PreAuthorize("@permisoService.tienePermiso(authentication.name, 'Cuotas', 'editar')")
     @PutMapping("/{id}")
     public ResponseEntity<?> editarMonto(@PathVariable Integer id, @RequestBody BigDecimal nuevoMonto, Authentication authentication, HttpServletRequest request) {
         return cuotaRepository.findById(id)
@@ -55,6 +59,7 @@ public class CuotaController {
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
+    @PreAuthorize("@permisoService.tienePermiso(authentication.name, 'Cuotas', 'eliminar')")
     @DeleteMapping("/{id}")
     public ResponseEntity<?> anular(@PathVariable Integer id, Authentication authentication, HttpServletRequest request) {
         return cuotaRepository.findById(id)

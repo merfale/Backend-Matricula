@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 import java.util.List;
 
 @RestController
@@ -18,11 +19,13 @@ public class TipoDocumentoController {
     private final TipoDocumentoRepository tipoDocumentoRepository;
     private final AuditoriaService auditoriaService; // MEJORA: auditoría real
 
+    @PreAuthorize("@permisoService.tienePermiso(authentication.name, 'TiposDocumento', 'ver')")
     @GetMapping
     public List<TipoDocumento> listar() {
         return tipoDocumentoRepository.findAll();
     }
 
+    @PreAuthorize("@permisoService.tienePermiso(authentication.name, 'TiposDocumento', 'ver')")
     @GetMapping("/{id}")
     public ResponseEntity<?> obtener(@PathVariable Integer id) {
         return tipoDocumentoRepository.findById(id)
@@ -30,6 +33,7 @@ public class TipoDocumentoController {
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
+    @PreAuthorize("@permisoService.tienePermiso(authentication.name, 'TiposDocumento', 'crear')")
     @PostMapping
     public ResponseEntity<?> crear(@RequestBody TipoDocumento request, Authentication authentication, HttpServletRequest httpRequest) {
         request.setCodTipoDocumento(null); // por si mandan un id por error
@@ -45,6 +49,7 @@ public class TipoDocumentoController {
         return ResponseEntity.ok(guardado);
     }
 
+    @PreAuthorize("@permisoService.tienePermiso(authentication.name, 'TiposDocumento', 'editar')")
     @PutMapping("/{id}")
     public ResponseEntity<?> editar(@PathVariable Integer id, @RequestBody TipoDocumento request,
                                     Authentication authentication, HttpServletRequest httpRequest) {
@@ -67,7 +72,7 @@ public class TipoDocumentoController {
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    // Eliminación LÓGICA (no física), consistente con el resto del proyecto
+    @PreAuthorize("@permisoService.tienePermiso(authentication.name, 'TiposDocumento', 'eliminar')")
     @DeleteMapping("/{id}")
     public ResponseEntity<?> eliminar(@PathVariable Integer id, Authentication authentication, HttpServletRequest request) {
         return tipoDocumentoRepository.findById(id)

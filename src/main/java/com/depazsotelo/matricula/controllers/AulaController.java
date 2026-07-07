@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 import java.util.List;
 
 @RestController
@@ -25,11 +26,13 @@ public class AulaController {
     private final GradoRepository gradoRepository;
     private final AuditoriaService auditoriaService;
 
+    @PreAuthorize("@permisoService.tienePermiso(authentication.name, 'Aulas', 'ver')")
     @GetMapping
     public List<Aula> listar() {
         return aulaRepository.findAll();
     }
 
+    @PreAuthorize("@permisoService.tienePermiso(authentication.name, 'Aulas', 'ver')")
     @GetMapping("/{id}")
     public ResponseEntity<?> obtener(@PathVariable Integer id) {
         return aulaRepository.findById(id)
@@ -37,6 +40,7 @@ public class AulaController {
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
+    @PreAuthorize("@permisoService.tienePermiso(authentication.name, 'Aulas', 'crear')")
     @PostMapping
     public ResponseEntity<?> crear(@RequestBody AulaRequest request, Authentication authentication, HttpServletRequest httpRequest) {
         try {
@@ -57,6 +61,7 @@ public class AulaController {
         }
     }
 
+    @PreAuthorize("@permisoService.tienePermiso(authentication.name, 'Aulas', 'editar')")
     @PutMapping("/{id}")
     public ResponseEntity<?> editar(@PathVariable Integer id, @RequestBody AulaRequest request, Authentication authentication, HttpServletRequest httpRequest) {
         return aulaRepository.findById(id)
@@ -79,6 +84,7 @@ public class AulaController {
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
+    @PreAuthorize("@permisoService.tienePermiso(authentication.name, 'Aulas', 'eliminar')")
     @DeleteMapping("/{id}")
     public ResponseEntity<?> eliminar(@PathVariable Integer id, Authentication authentication, HttpServletRequest request) {
         return aulaRepository.findById(id)

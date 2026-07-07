@@ -12,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 import java.util.List;
 
 @RestController
@@ -23,6 +24,7 @@ public class AlumnoController {
     private final TipoDocumentoRepository tipoDocumentoRepository;
     private final AuditoriaService auditoriaService;
 
+    @PreAuthorize("@permisoService.tienePermiso(authentication.name, 'Alumnos', 'crear')")
     @PostMapping("/registrar")
     public ResponseEntity<?> registrarAlumno(@RequestBody AlumnoRequest request, Authentication authentication, HttpServletRequest httpRequest) {
 
@@ -86,12 +88,13 @@ public class AlumnoController {
             return ResponseEntity.internalServerError().body("Error interno: " + e.getMessage());
         }
     }
-
+    @PreAuthorize("@permisoService.tienePermiso(authentication.name, 'Alumnos', 'ver')")
     @GetMapping
     public List<Alumno> listar() {
         return alumnoRepository.findAll();
     }
 
+    @PreAuthorize("@permisoService.tienePermiso(authentication.name, 'Alumnos', 'ver')")
     @GetMapping("/{id}")
     public ResponseEntity<?> obtener(@PathVariable Integer id) {
         return alumnoRepository.findById(id)
@@ -99,6 +102,7 @@ public class AlumnoController {
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
+    @PreAuthorize("@permisoService.tienePermiso(authentication.name, 'Alumnos', 'editar')")
     @PutMapping("/{id}")
     public ResponseEntity<?> editar(@PathVariable Integer id, @RequestBody AlumnoRequest request, Authentication authentication, HttpServletRequest httpRequest) {
         return alumnoRepository.findById(id)

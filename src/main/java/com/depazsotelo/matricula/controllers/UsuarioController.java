@@ -13,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 import java.util.List;
 
 @RestController
@@ -25,11 +26,13 @@ public class UsuarioController {
     private final PasswordEncoder passwordEncoder;
     private final AuditoriaService auditoriaService; // MEJORA: auditoría real
 
+    @PreAuthorize("@permisoService.tienePermiso(authentication.name, 'Usuarios', 'ver')")
     @GetMapping
     public List<Usuario> listar() {
         return usuarioRepository.findAll();
     }
 
+    @PreAuthorize("@permisoService.tienePermiso(authentication.name, 'Usuarios', 'crear')")
     @PostMapping
     public ResponseEntity<?> crear(@RequestBody CrearUsuarioRequest request, Authentication authentication, HttpServletRequest httpRequest) {
         Rol rol = rolRepository.findById(request.getIdRol())
@@ -60,6 +63,7 @@ public class UsuarioController {
         return ResponseEntity.ok(guardado);
     }
 
+    @PreAuthorize("@permisoService.tienePermiso(authentication.name, 'Usuarios', 'eliminar')")
     @DeleteMapping("/{id}")
     public ResponseEntity<?> eliminarLogico(@PathVariable Integer id, Authentication authentication, HttpServletRequest request) {
         Usuario usuario = usuarioRepository.findById(id).orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
@@ -85,6 +89,7 @@ public class UsuarioController {
         return ResponseEntity.ok().build();
     }
 
+    @PreAuthorize("@permisoService.tienePermiso(authentication.name, 'Usuarios', 'ver')")
     @GetMapping("/{id}")
     public ResponseEntity<?> obtener(@PathVariable Integer id) {
         return usuarioRepository.findById(id)
@@ -92,6 +97,7 @@ public class UsuarioController {
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
+    @PreAuthorize("@permisoService.tienePermiso(authentication.name, 'Usuarios', 'editar')")
     @PutMapping("/{id}")
     public ResponseEntity<?> editar(@PathVariable Integer id, @RequestBody CrearUsuarioRequest request,
                                     Authentication authentication, HttpServletRequest httpRequest) {

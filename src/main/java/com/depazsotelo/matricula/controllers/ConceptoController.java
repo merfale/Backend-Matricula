@@ -12,6 +12,7 @@ import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 import java.util.List;
 
 @RestController
@@ -24,11 +25,13 @@ public class ConceptoController {
     private final TipoConceptoRepository tipoConceptoRepository;
     private final AuditoriaService auditoriaService;
 
+    @PreAuthorize("@permisoService.tienePermiso(authentication.name, 'Conceptos', 'ver')")
     @GetMapping
     public List<Concepto> listar() {
         return conceptoRepository.findAll();
     }
 
+    @PreAuthorize("@permisoService.tienePermiso(authentication.name, 'Conceptos', 'ver')")
     @GetMapping("/{id}")
     public ResponseEntity<?> obtener(@PathVariable Integer id) {
         return conceptoRepository.findById(id)
@@ -36,6 +39,7 @@ public class ConceptoController {
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
+    @PreAuthorize("@permisoService.tienePermiso(authentication.name, 'Conceptos', 'crear')")
     @PostMapping
     public ResponseEntity<?> crear(@RequestBody ConceptoRequest request, Authentication authentication, HttpServletRequest httpRequest) {
         try {
@@ -56,6 +60,7 @@ public class ConceptoController {
         }
     }
 
+    @PreAuthorize("@permisoService.tienePermiso(authentication.name, 'Conceptos', 'editar')")
     @PutMapping("/{id}")
     public ResponseEntity<?> editar(@PathVariable Integer id, @RequestBody ConceptoRequest request, Authentication authentication, HttpServletRequest httpRequest) {
         return conceptoRepository.findById(id)
@@ -90,6 +95,7 @@ public class ConceptoController {
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
+    @PreAuthorize("@permisoService.tienePermiso(authentication.name, 'Conceptos', 'eliminar')")
     @DeleteMapping("/{id}")
     public ResponseEntity<?> eliminar(@PathVariable Integer id, Authentication authentication, HttpServletRequest request) {
         return conceptoRepository.findById(id)

@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 @RestController
 @RequestMapping("/api/pagos")
@@ -18,6 +19,7 @@ public class PagoController {
     private final PagoService pagoService;
     private final AuditoriaService auditoriaService; // MEJORA: auditoría real (operación "PAGO" del spec)
 
+    @PreAuthorize("@permisoService.tienePermiso(authentication.name, 'Pagos', 'editar')")
     @PostMapping("/procesar")
     public ResponseEntity<?> procesarPago(@RequestBody PagoRequest request, Authentication authentication, HttpServletRequest httpRequest) {
         try {
@@ -41,6 +43,7 @@ public class PagoController {
         }
     }
 
+    @PreAuthorize("@permisoService.tienePermiso(authentication.name, 'Pagos', 'ver')")
     @GetMapping("/lista")
     public ResponseEntity<?> listarCuotas() {
         return ResponseEntity.ok(pagoService.listarTodasLasCuotas());

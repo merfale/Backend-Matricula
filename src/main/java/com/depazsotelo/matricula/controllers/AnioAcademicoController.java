@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 import java.util.List;
 
 @RestController
@@ -17,11 +18,13 @@ public class AnioAcademicoController {
     private final AnioAcademicoRepository AnioAcademicoRepository;
     private final AuditoriaService auditoriaService;
 
+    @PreAuthorize("@permisoService.tienePermiso(authentication.name, 'AniosAcademicos', 'ver')")
     @GetMapping
     public List<AnioAcademico> listar() {
         return AnioAcademicoRepository.findAll();
     }
 
+    @PreAuthorize("@permisoService.tienePermiso(authentication.name, 'AniosAcademicos', 'ver')")
     @GetMapping("/{id}")
     public ResponseEntity<?> obtener(@PathVariable Integer id) {
         return AnioAcademicoRepository.findById(id)
@@ -29,6 +32,7 @@ public class AnioAcademicoController {
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
+    @PreAuthorize("@permisoService.tienePermiso(authentication.name, 'AniosAcademicos', 'crear')")
     @PostMapping
     public ResponseEntity<?> crear(@RequestBody AnioAcademico request, Authentication authentication, HttpServletRequest httpRequest) {
         request.setCodAnioAcademico(null);
@@ -44,6 +48,7 @@ public class AnioAcademicoController {
         return ResponseEntity.ok(guardado);
     }
 
+    @PreAuthorize("@permisoService.tienePermiso(authentication.name, 'AniosAcademicos', 'editar')")
     @PutMapping("/{id}")
     public ResponseEntity<?> editar(@PathVariable Integer id, @RequestBody AnioAcademico request, Authentication authentication, HttpServletRequest httpRequest) {
         return AnioAcademicoRepository.findById(id)
@@ -65,6 +70,7 @@ public class AnioAcademicoController {
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
+    @PreAuthorize("@permisoService.tienePermiso(authentication.name, 'AniosAcademicos', 'eliminar')")
     @DeleteMapping("/{id}")
     public ResponseEntity<?> eliminar(@PathVariable Integer id, Authentication authentication, HttpServletRequest request) {
         return AnioAcademicoRepository.findById(id)

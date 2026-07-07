@@ -22,6 +22,8 @@ public class DataSeeder implements CommandLineRunner {
     private final TipoConceptoRepository tipoConceptoRepository;
     private final ConceptoRepository conceptoRepository;
     private final PasswordEncoder passwordEncoder;
+    private final FuncionalidadRepository funcionalidadRepository;
+    private final RolFuncionalidadRepository rolFuncionalidadRepository;
 
     @Override
     public void run(String... args) throws Exception {
@@ -139,6 +141,52 @@ public class DataSeeder implements CommandLineRunner {
             marzoConcepto.setObligatorio(true);
             conceptoRepository.save(marzoConcepto);
             System.out.println("✅ Tarifario y Conceptos de Pago 2026 sembrados con éxito");
+        }
+
+        // 5. Sembrar Funcionalidades base + permisos por defecto para Director y Secretaria.
+// Superusuario no necesita filas: PermisoService.tienePermiso() ya lo deja pasar siempre.
+        if (funcionalidadRepository.count() == 0) {
+
+            String[] nombresFuncionalidades = {
+                    "Alumnos", "Aulas", "AniosAcademicos", "Conceptos", "TiposConcepto",
+                    "TiposDocumento", "Grados", "Niveles", "Usuarios", "Roles",
+                    "Funcionalidades", "Permisos", "Matriculas", "Cuotas", "Pagos", "Auditoria"
+            };
+
+            Rol rolDirector = rolRepository.findByNombreRol("DIRECTOR")
+                    .orElseThrow(() -> new RuntimeException("Rol DIRECTOR no encontrado"));
+            Rol rolSecretaria = rolRepository.findByNombreRol("SECRETARIA")
+                    .orElseThrow(() -> new RuntimeException("Rol SECRETARIA no encontrado"));
+
+            for (String nombre : nombresFuncionalidades) {
+                Funcionalidad funcionalidad = new Funcionalidad();
+                funcionalidad.setNombre(nombre);
+                funcionalidad = funcionalidadRepository.save(funcionalidad);
+
+                // DIRECTOR: solo consulta
+                RolFuncionalidad permisoDirector = new RolFuncionalidad();
+                permisoDirector.setRol(rolDirector);
+                permisoDirector.setFuncionalidad(funcionalidad);
+                permisoDirector.setVer(true);
+                permisoDirector.setCrear(false);
+                permisoDirector.setEditar(false);
+                permisoDirector.setEliminar(false);
+                permisoDirector.setImprimir(false);
+                rolFuncionalidadRepository.save(permisoDirector);
+
+                // SECRETARIA: todas las operaciones
+                RolFuncionalidad permisoSecretaria = new RolFuncionalidad();
+                permisoSecretaria.setRol(rolSecretaria);
+                permisoSecretaria.setFuncionalidad(funcionalidad);
+                permisoSecretaria.setVer(true);
+                permisoSecretaria.setCrear(true);
+                permisoSecretaria.setEditar(true);
+                permisoSecretaria.setEliminar(true);
+                permisoSecretaria.setImprimir(true);
+                rolFuncionalidadRepository.save(permisoSecretaria);
+            }
+
+            System.out.println("✅ Funcionalidades y permisos por defecto (Director/Secretaria) sembrados con éxito");
         }
     }
 }

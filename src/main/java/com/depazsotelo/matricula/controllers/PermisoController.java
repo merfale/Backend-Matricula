@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 import java.util.List;
 
 @RestController
@@ -21,13 +22,13 @@ public class PermisoController {
     private final RolFuncionalidadRepository rolFuncionalidadRepository;
     private final AuditoriaService auditoriaService; // MEJORA: auditoría real
 
-    // trae los permisos actuales de un rol para pintar los checkboxes marcados
+    @PreAuthorize("@permisoService.tienePermiso(authentication.name, 'Permisos', 'ver')")
     @GetMapping("/rol/{idRol}")
     public List<RolFuncionalidad> obtenerPorRol(@PathVariable Integer idRol) {
         return rolFuncionalidadRepository.findByRolIdRol(idRol);
     }
 
-    // el botón "Aplicar" del spec
+    @PreAuthorize("@permisoService.tienePermiso(authentication.name, 'Permisos', 'editar')")
     @PostMapping("/aplicar")
     public ResponseEntity<?> aplicar(@RequestBody AplicarPermisosRequest request, Authentication authentication, HttpServletRequest httpRequest) {
         try {

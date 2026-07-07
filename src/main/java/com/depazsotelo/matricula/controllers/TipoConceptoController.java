@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 import java.util.List;
 
 @RestController
@@ -18,11 +19,13 @@ public class TipoConceptoController {
     private final TipoConceptoRepository tipoConceptoRepository;
     private final AuditoriaService auditoriaService; // MEJORA: auditoría real
 
+    @PreAuthorize("@permisoService.tienePermiso(authentication.name, 'TiposConcepto', 'ver')")
     @GetMapping
     public List<TipoConcepto> listar() {
         return tipoConceptoRepository.findAll();
     }
 
+    @PreAuthorize("@permisoService.tienePermiso(authentication.name, 'TiposConcepto', 'ver')")
     @GetMapping("/{id}")
     public ResponseEntity<?> obtener(@PathVariable Integer id) {
         return tipoConceptoRepository.findById(id)
@@ -30,6 +33,7 @@ public class TipoConceptoController {
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
+    @PreAuthorize("@permisoService.tienePermiso(authentication.name, 'TiposConcepto', 'crear')")
     @PostMapping
     public ResponseEntity<?> crear(@RequestBody TipoConcepto request, Authentication authentication, HttpServletRequest httpRequest) {
         request.setCodTipoConcepto(null);
@@ -45,6 +49,7 @@ public class TipoConceptoController {
         return ResponseEntity.ok(guardado);
     }
 
+    @PreAuthorize("@permisoService.tienePermiso(authentication.name, 'TiposConcepto', 'editar')")
     @PutMapping("/{id}")
     public ResponseEntity<?> editar(@PathVariable Integer id, @RequestBody TipoConcepto request,
                                     Authentication authentication, HttpServletRequest httpRequest) {
@@ -68,6 +73,7 @@ public class TipoConceptoController {
     }
 
 
+    @PreAuthorize("@permisoService.tienePermiso(authentication.name, 'TiposConcepto', 'eliminar')")
     @DeleteMapping("/{id}")
     public ResponseEntity<?> eliminar(@PathVariable Integer id, Authentication authentication, HttpServletRequest request) {
         return tipoConceptoRepository.findById(id)

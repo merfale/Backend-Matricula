@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 import java.util.List;
 
 @RestController
@@ -18,11 +19,13 @@ public class RolController {
     private final RolRepository rolRepository;
     private final AuditoriaService auditoriaService; // MEJORA: auditoría real
 
+    @PreAuthorize("@permisoService.tienePermiso(authentication.name, 'Roles', 'ver')")
     @GetMapping
     public List<Rol> listar() {
         return rolRepository.findAll();
     }
 
+    @PreAuthorize("@permisoService.tienePermiso(authentication.name, 'Roles', 'crear')")
     @PostMapping
     public ResponseEntity<?> crear(@RequestBody Rol rol, Authentication authentication, HttpServletRequest request) {
         rol.setEstado(true);
@@ -37,7 +40,7 @@ public class RolController {
         return ResponseEntity.ok(guardado);
     }
 
-    // MEJORA: eliminación lógica, no física (como pide el spec)
+    @PreAuthorize("@permisoService.tienePermiso(authentication.name, 'Roles', 'eliminar')")
     @DeleteMapping("/{id}")
     public ResponseEntity<?> eliminarLogico(@PathVariable Integer id, Authentication authentication, HttpServletRequest request) {
         Rol rol = rolRepository.findById(id).orElseThrow(() -> new RuntimeException("Rol no encontrado"));
@@ -53,6 +56,7 @@ public class RolController {
         return ResponseEntity.ok().build();
     }
 
+    @PreAuthorize("@permisoService.tienePermiso(authentication.name, 'Roles', 'editar')")
     @PutMapping("/{id}")
     public ResponseEntity<?> editar(@PathVariable Integer id, @RequestBody Rol request,
                                     Authentication authentication, HttpServletRequest httpRequest) {

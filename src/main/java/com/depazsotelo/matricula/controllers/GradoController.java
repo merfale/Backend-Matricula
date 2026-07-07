@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 import java.util.List;
 
 @RestController
@@ -17,11 +18,13 @@ public class GradoController {
     private final GradoRepository GradoRepository;
     private final AuditoriaService auditoriaService;
 
+    @PreAuthorize("@permisoService.tienePermiso(authentication.name, 'Grados', 'ver')")
     @GetMapping
     public List<Grado> listar() {
         return GradoRepository.findAll();
     }
 
+    @PreAuthorize("@permisoService.tienePermiso(authentication.name, 'Grados', 'ver')")
     @GetMapping("/{id}")
     public ResponseEntity<?> obtener(@PathVariable Integer id) {
         return GradoRepository.findById(id)
@@ -29,6 +32,7 @@ public class GradoController {
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
+    @PreAuthorize("@permisoService.tienePermiso(authentication.name, 'Grados', 'crear')")
     @PostMapping
     public ResponseEntity<?> crear(@RequestBody Grado request, Authentication authentication, HttpServletRequest httpRequest) {
         request.setCodGrado(null);
@@ -44,6 +48,7 @@ public class GradoController {
         return ResponseEntity.ok(guardado);
     }
 
+    @PreAuthorize("@permisoService.tienePermiso(authentication.name, 'Grados', 'editar')")
     @PutMapping("/{id}")
     public ResponseEntity<?> editar(@PathVariable Integer id, @RequestBody Grado request, Authentication authentication, HttpServletRequest httpRequest) {
         return GradoRepository.findById(id)
@@ -65,6 +70,7 @@ public class GradoController {
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
+    @PreAuthorize("@permisoService.tienePermiso(authentication.name, 'Grados', 'eliminar')")
     @DeleteMapping("/{id}")
     public ResponseEntity<?> eliminar(@PathVariable Integer id, Authentication authentication, HttpServletRequest request) {
         return GradoRepository.findById(id)

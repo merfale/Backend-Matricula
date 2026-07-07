@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 import java.util.List;
 
 @RestController
@@ -24,6 +25,7 @@ public class MatriculaController {
     private final TotpService totpService;
     private final AuditoriaService auditoriaService;
 
+    @PreAuthorize("@permisoService.tienePermiso(authentication.name, 'Matriculas', 'crear')")
     @PostMapping("/registrar")
     public ResponseEntity<?> registrarMatricula(
             @RequestParam Integer codAlumno,
@@ -58,11 +60,13 @@ public class MatriculaController {
 
     private final MatriculaRepository matriculaRepository;
 
+    @PreAuthorize("@permisoService.tienePermiso(authentication.name, 'Matriculas', 'ver')")
     @GetMapping
     public List<Matricula> listar() {
         return matriculaRepository.findAll();
     }
 
+    @PreAuthorize("@permisoService.tienePermiso(authentication.name, 'Matriculas', 'ver')")
     @GetMapping("/{id}")
     public ResponseEntity<?> obtener(@PathVariable Integer id) {
         return matriculaRepository.findById(id)
@@ -70,6 +74,7 @@ public class MatriculaController {
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
+    @PreAuthorize("@permisoService.tienePermiso(authentication.name, 'Matriculas', 'eliminar')")
     @DeleteMapping("/{id}")
     public ResponseEntity<?> anular(@PathVariable Integer id , Authentication authentication, HttpServletRequest request) {
         return matriculaRepository.findById(id)

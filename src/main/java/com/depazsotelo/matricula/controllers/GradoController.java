@@ -4,6 +4,7 @@ import com.depazsotelo.matricula.models.Grado;
 import com.depazsotelo.matricula.repositories.GradoRepository;
 import com.depazsotelo.matricula.services.AuditoriaService;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -34,7 +35,7 @@ public class GradoController {
 
     @PreAuthorize("@permisoService.tienePermiso(authentication.name, 'Grados', 'crear')")
     @PostMapping
-    public ResponseEntity<?> crear(@RequestBody Grado request, Authentication authentication, HttpServletRequest httpRequest) {
+    public ResponseEntity<?> crear(@Valid @RequestBody Grado request, Authentication authentication, HttpServletRequest httpRequest) {
         request.setCodGrado(null);
         request.setEstado(true);
         Grado guardado = GradoRepository.save(request);
@@ -50,7 +51,7 @@ public class GradoController {
 
     @PreAuthorize("@permisoService.tienePermiso(authentication.name, 'Grados', 'editar')")
     @PutMapping("/{id}")
-    public ResponseEntity<?> editar(@PathVariable Integer id, @RequestBody Grado request, Authentication authentication, HttpServletRequest httpRequest) {
+    public ResponseEntity<?> editar(@Valid @PathVariable Integer id, @RequestBody Grado request, Authentication authentication, HttpServletRequest httpRequest) {
         return GradoRepository.findById(id)
                 .map(existente -> {
                     String nombreAnterior = existente.getNombre();

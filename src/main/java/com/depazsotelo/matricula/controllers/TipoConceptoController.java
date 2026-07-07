@@ -4,6 +4,7 @@ import com.depazsotelo.matricula.models.TipoConcepto;
 import com.depazsotelo.matricula.repositories.TipoConceptoRepository;
 import com.depazsotelo.matricula.services.AuditoriaService;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -35,7 +36,7 @@ public class TipoConceptoController {
 
     @PreAuthorize("@permisoService.tienePermiso(authentication.name, 'TiposConcepto', 'crear')")
     @PostMapping
-    public ResponseEntity<?> crear(@RequestBody TipoConcepto request, Authentication authentication, HttpServletRequest httpRequest) {
+    public ResponseEntity<?> crear(@Valid @RequestBody TipoConcepto request, Authentication authentication, HttpServletRequest httpRequest) {
         request.setCodTipoConcepto(null);
         request.setEstado(true);
         TipoConcepto guardado = tipoConceptoRepository.save(request);
@@ -51,7 +52,7 @@ public class TipoConceptoController {
 
     @PreAuthorize("@permisoService.tienePermiso(authentication.name, 'TiposConcepto', 'editar')")
     @PutMapping("/{id}")
-    public ResponseEntity<?> editar(@PathVariable Integer id, @RequestBody TipoConcepto request,
+    public ResponseEntity<?> editar(@Valid @PathVariable Integer id, @RequestBody TipoConcepto request,
                                     Authentication authentication, HttpServletRequest httpRequest) {
         return tipoConceptoRepository.findById(id)
                 .map(existente -> {

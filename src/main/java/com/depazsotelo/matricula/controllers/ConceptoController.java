@@ -7,6 +7,7 @@ import com.depazsotelo.matricula.repositories.ConceptoRepository;
 import com.depazsotelo.matricula.repositories.TipoConceptoRepository;
 import com.depazsotelo.matricula.services.AuditoriaService;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.http.ResponseEntity;
@@ -43,7 +44,7 @@ public class ConceptoController {
 
     @PreAuthorize("@permisoService.tienePermiso(authentication.name, 'Conceptos', 'crear')")
     @PostMapping
-    public ResponseEntity<?> crear(@RequestBody ConceptoRequest request, Authentication authentication, HttpServletRequest httpRequest) {
+    public ResponseEntity<?> crear(@Valid @RequestBody ConceptoRequest request, Authentication authentication, HttpServletRequest httpRequest) {
         try {
             Concepto concepto = new Concepto();
             aplicarDatos(concepto, request);
@@ -64,7 +65,7 @@ public class ConceptoController {
 
     @PreAuthorize("@permisoService.tienePermiso(authentication.name, 'Conceptos', 'editar')")
     @PutMapping("/{id}")
-    public ResponseEntity<?> editar(@PathVariable Integer id, @RequestBody ConceptoRequest request, Authentication authentication, HttpServletRequest httpRequest) {
+    public ResponseEntity<?> editar(@Valid @PathVariable Integer id, @RequestBody ConceptoRequest request, Authentication authentication, HttpServletRequest httpRequest) {
         return conceptoRepository.findById(id)
                 .map(existente -> {
                     try {

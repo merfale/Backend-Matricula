@@ -5,6 +5,7 @@ import com.depazsotelo.matricula.models.Cuota;
 import com.depazsotelo.matricula.services.AuditoriaService;
 import com.depazsotelo.matricula.services.PagoService;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -21,7 +22,7 @@ public class PagoController {
 
     @PreAuthorize("@permisoService.tienePermiso(authentication.name, 'Pagos', 'editar')")
     @PostMapping("/procesar")
-    public ResponseEntity<?> procesarPago(@RequestBody PagoRequest request, Authentication authentication, HttpServletRequest httpRequest) {
+    public ResponseEntity<?> procesarPago(@Valid @RequestBody PagoRequest request, Authentication authentication, HttpServletRequest httpRequest) {
         try {
 
             Cuota cuotaPagada = pagoService.registrarPago(request.getCodCuota());

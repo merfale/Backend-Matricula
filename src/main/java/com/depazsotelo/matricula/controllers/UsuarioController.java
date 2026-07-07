@@ -8,6 +8,7 @@ import com.depazsotelo.matricula.repositories.UsuarioRepository;
 import com.depazsotelo.matricula.services.AuditoriaService;
 import jakarta.servlet.http.HttpServletRequest;
 import com.depazsotelo.matricula.dtos.CambiarPasswordRequest;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -34,7 +35,7 @@ public class UsuarioController {
 
     @PreAuthorize("@permisoService.tienePermiso(authentication.name, 'Usuarios', 'crear')")
     @PostMapping
-    public ResponseEntity<?> crear(@RequestBody CrearUsuarioRequest request, Authentication authentication, HttpServletRequest httpRequest) {
+    public ResponseEntity<?> crear(@Valid @RequestBody CrearUsuarioRequest request, Authentication authentication, HttpServletRequest httpRequest) {
         Rol rol = rolRepository.findById(request.getIdRol())
                 .orElseThrow(() -> new RuntimeException("Rol no encontrado"));
 
@@ -133,7 +134,7 @@ public class UsuarioController {
     }
 
     @PutMapping("/cambiar-password")
-    public ResponseEntity<?> cambiarPassword(@RequestBody CambiarPasswordRequest request,
+    public ResponseEntity<?> cambiarPassword(@Valid @RequestBody CambiarPasswordRequest request,
                                              Authentication authentication,
                                              HttpServletRequest httpRequest) {
 

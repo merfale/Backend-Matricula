@@ -4,6 +4,7 @@ import com.depazsotelo.matricula.models.TipoDocumento;
 import com.depazsotelo.matricula.repositories.TipoDocumentoRepository;
 import com.depazsotelo.matricula.services.AuditoriaService;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -35,7 +36,7 @@ public class TipoDocumentoController {
 
     @PreAuthorize("@permisoService.tienePermiso(authentication.name, 'TiposDocumento', 'crear')")
     @PostMapping
-    public ResponseEntity<?> crear(@RequestBody TipoDocumento request, Authentication authentication, HttpServletRequest httpRequest) {
+    public ResponseEntity<?> crear(@Valid @RequestBody TipoDocumento request, Authentication authentication, HttpServletRequest httpRequest) {
         request.setCodTipoDocumento(null); // por si mandan un id por error
         request.setEstado(true);
         TipoDocumento guardado = tipoDocumentoRepository.save(request);
@@ -51,7 +52,7 @@ public class TipoDocumentoController {
 
     @PreAuthorize("@permisoService.tienePermiso(authentication.name, 'TiposDocumento', 'editar')")
     @PutMapping("/{id}")
-    public ResponseEntity<?> editar(@PathVariable Integer id, @RequestBody TipoDocumento request,
+    public ResponseEntity<?> editar(@Valid @PathVariable Integer id, @RequestBody TipoDocumento request,
                                     Authentication authentication, HttpServletRequest httpRequest) {
         return tipoDocumentoRepository.findById(id)
                 .map(existente -> {

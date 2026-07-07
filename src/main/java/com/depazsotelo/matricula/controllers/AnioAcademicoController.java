@@ -4,6 +4,7 @@ import com.depazsotelo.matricula.models.AnioAcademico;
 import com.depazsotelo.matricula.repositories.AnioAcademicoRepository;
 import com.depazsotelo.matricula.services.AuditoriaService;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -34,7 +35,7 @@ public class AnioAcademicoController {
 
     @PreAuthorize("@permisoService.tienePermiso(authentication.name, 'AniosAcademicos', 'crear')")
     @PostMapping
-    public ResponseEntity<?> crear(@RequestBody AnioAcademico request, Authentication authentication, HttpServletRequest httpRequest) {
+    public ResponseEntity<?> crear(@Valid @RequestBody AnioAcademico request, Authentication authentication, HttpServletRequest httpRequest) {
         request.setCodAnioAcademico(null);
         request.setEstado(true);
         AnioAcademico guardado = AnioAcademicoRepository.save(request);
@@ -50,7 +51,7 @@ public class AnioAcademicoController {
 
     @PreAuthorize("@permisoService.tienePermiso(authentication.name, 'AniosAcademicos', 'editar')")
     @PutMapping("/{id}")
-    public ResponseEntity<?> editar(@PathVariable Integer id, @RequestBody AnioAcademico request, Authentication authentication, HttpServletRequest httpRequest) {
+    public ResponseEntity<?> editar(@Valid @PathVariable Integer id, @RequestBody AnioAcademico request, Authentication authentication, HttpServletRequest httpRequest) {
         return AnioAcademicoRepository.findById(id)
                 .map(existente -> {
                     String anioAnterior = existente.getAnio();

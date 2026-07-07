@@ -8,6 +8,7 @@ import com.depazsotelo.matricula.repositories.GradoRepository;
 import com.depazsotelo.matricula.repositories.NivelRepository;
 import com.depazsotelo.matricula.services.AuditoriaService;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -42,7 +43,7 @@ public class AulaController {
 
     @PreAuthorize("@permisoService.tienePermiso(authentication.name, 'Aulas', 'crear')")
     @PostMapping
-    public ResponseEntity<?> crear(@RequestBody AulaRequest request, Authentication authentication, HttpServletRequest httpRequest) {
+    public ResponseEntity<?> crear(@Valid @RequestBody AulaRequest request, Authentication authentication, HttpServletRequest httpRequest) {
         try {
             Aula aula = new Aula();
             aplicarDatos(aula, request);
@@ -63,7 +64,7 @@ public class AulaController {
 
     @PreAuthorize("@permisoService.tienePermiso(authentication.name, 'Aulas', 'editar')")
     @PutMapping("/{id}")
-    public ResponseEntity<?> editar(@PathVariable Integer id, @RequestBody AulaRequest request, Authentication authentication, HttpServletRequest httpRequest) {
+    public ResponseEntity<?> editar(@Valid @PathVariable Integer id, @RequestBody AulaRequest request, Authentication authentication, HttpServletRequest httpRequest) {
         return aulaRepository.findById(id)
                 .map(existente -> {
                     try {

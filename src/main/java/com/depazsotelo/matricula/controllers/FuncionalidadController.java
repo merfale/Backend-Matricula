@@ -4,6 +4,7 @@ import com.depazsotelo.matricula.models.Funcionalidad;
 import com.depazsotelo.matricula.repositories.FuncionalidadRepository;
 import com.depazsotelo.matricula.services.AuditoriaService;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -33,7 +34,7 @@ public class FuncionalidadController {
 
     @PreAuthorize("@permisoService.tienePermiso(authentication.name, 'Funcionalidades', 'crear')")
     @PostMapping
-    public Funcionalidad crear(@RequestBody Funcionalidad funcionalidad, Authentication authentication, HttpServletRequest request) {
+    public Funcionalidad crear(@Valid @RequestBody Funcionalidad funcionalidad, Authentication authentication, HttpServletRequest request) {
         Funcionalidad guardada = funcionalidadRepository.save(funcionalidad);
 
         auditoriaService.registrar(
@@ -57,7 +58,7 @@ public class FuncionalidadController {
 
     @PreAuthorize("@permisoService.tienePermiso(authentication.name, 'Funcionalidades', 'eliminar')")
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> editar(@PathVariable Integer id, @RequestBody Funcionalidad request, Authentication authentication, HttpServletRequest httpRequest) {
+    public ResponseEntity<?> editar(@Valid @PathVariable Integer id, @RequestBody Funcionalidad request, Authentication authentication, HttpServletRequest httpRequest) {
         return funcionalidadRepository.findById(id)
                 .map(existente -> {
                     String nombreAnterior = existente.getNombre();

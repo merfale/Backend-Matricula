@@ -6,6 +6,7 @@ import com.depazsotelo.matricula.repositories.RolFuncionalidadRepository;
 import com.depazsotelo.matricula.services.AuditoriaService;
 import com.depazsotelo.matricula.services.PermisoService;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -30,7 +31,7 @@ public class PermisoController {
 
     @PreAuthorize("@permisoService.tienePermiso(authentication.name, 'Permisos', 'editar')")
     @PostMapping("/aplicar")
-    public ResponseEntity<?> aplicar(@RequestBody AplicarPermisosRequest request, Authentication authentication, HttpServletRequest httpRequest) {
+    public ResponseEntity<?> aplicar(@Valid @RequestBody AplicarPermisosRequest request, Authentication authentication, HttpServletRequest httpRequest) {
         try {
             permisoService.aplicarPermisos(request);
 

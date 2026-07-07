@@ -4,6 +4,7 @@ import com.depazsotelo.matricula.models.Nivel;
 import com.depazsotelo.matricula.repositories.NivelRepository;
 import com.depazsotelo.matricula.services.AuditoriaService;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -34,7 +35,7 @@ public class NivelController {
 
     @PreAuthorize("@permisoService.tienePermiso(authentication.name, 'Niveles', 'crear')")
     @PostMapping
-    public ResponseEntity<?> crear(@RequestBody Nivel request, Authentication authentication, HttpServletRequest httpRequest) {
+    public ResponseEntity<?> crear(@Valid @RequestBody Nivel request, Authentication authentication, HttpServletRequest httpRequest) {
         request.setCodNivel(null); // por si mandan un id por error
         request.setEstado(true);
         Nivel guardado = nivelRepository.save(request);
@@ -50,7 +51,7 @@ public class NivelController {
 
     @PreAuthorize("@permisoService.tienePermiso(authentication.name, 'Niveles', 'editar')")
     @PutMapping("/{id}")
-    public ResponseEntity<?> editar(@PathVariable Integer id, @RequestBody Nivel request,
+    public ResponseEntity<?> editar(@Valid @PathVariable Integer id, @RequestBody Nivel request,
                                     Authentication authentication, HttpServletRequest httpRequest) {
         return nivelRepository.findById(id)
                 .map(existente -> {

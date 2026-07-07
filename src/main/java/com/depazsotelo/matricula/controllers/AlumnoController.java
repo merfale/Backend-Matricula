@@ -7,12 +7,14 @@ import com.depazsotelo.matricula.repositories.AlumnoRepository;
 import com.depazsotelo.matricula.repositories.TipoDocumentoRepository;
 import com.depazsotelo.matricula.services.AuditoriaService;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.security.access.prepost.PreAuthorize;
+import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 
 @RestController
@@ -26,7 +28,16 @@ public class AlumnoController {
 
     @PreAuthorize("@permisoService.tienePermiso(authentication.name, 'Alumnos', 'crear')")
     @PostMapping("/registrar")
-    public ResponseEntity<?> registrarAlumno(@RequestBody AlumnoRequest request, Authentication authentication, HttpServletRequest httpRequest) {
+    public ResponseEntity<?> registrarAlumno(@Valid @RequestBody AlumnoRequest request, Authentication authentication, HttpServletRequest httpRequest) {
+
+        try {
+            LocalDate fecha = LocalDate.parse(request.getFechaNacimiento());
+            if (fecha.isAfter(LocalDate.now())) {
+                return ResponseEntity.badRequest().body("La fecha de nacimiento no puede ser futura.");
+            }
+        } catch (DateTimeParseException e) {
+            return ResponseEntity.badRequest().body("La fecha de nacimiento no es una fecha válida.");
+        }
 
         try {
             if (alumnoRepository.findByNumeroDocumento(request.getNumeroDocumento()).isPresent()) {
@@ -104,7 +115,17 @@ public class AlumnoController {
 
     @PreAuthorize("@permisoService.tienePermiso(authentication.name, 'Alumnos', 'editar')")
     @PutMapping("/{id}")
-    public ResponseEntity<?> editar(@PathVariable Integer id, @RequestBody AlumnoRequest request, Authentication authentication, HttpServletRequest httpRequest) {
+    public ResponseEntity<?> editar(@Valid @PathVariable Integer id, @RequestBody AlumnoRequest request, Authentication authentication, HttpServletRequest httpRequest) {
+
+        try {
+            LocalDate fecha = LocalDate.parse(request.getFechaNacimiento());
+            if (fecha.isAfter(LocalDate.now())) {
+                return ResponseEntity.badRequest().body("La fecha de nacimiento no puede ser futura.");
+            }
+        } catch (DateTimeParseException e) {
+            return ResponseEntity.badRequest().body("La fecha de nacimiento no es una fecha válida.");
+        }
+
         return alumnoRepository.findById(id)
                 .map(existente -> {
                     try {

@@ -34,7 +34,6 @@ public class Alumno {
     @Column(length = 60, nullable = false)
     private String apellidoMaterno;
 
-    // --- MAGIA CRIPTOGRÁFICA: Cifrado AES automático ---
     @Convert(converter = com.depazsotelo.matricula.security.AesEncryptor.class)
     @Column(columnDefinition = "TEXT", nullable = false)
     private String fechaNacimiento;

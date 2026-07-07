@@ -7,6 +7,7 @@ import com.depazsotelo.matricula.repositories.RolRepository;
 import com.depazsotelo.matricula.repositories.UsuarioRepository;
 import com.depazsotelo.matricula.services.AuditoriaService;
 import jakarta.servlet.http.HttpServletRequest;
+import com.depazsotelo.matricula.dtos.CambiarPasswordRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -29,7 +30,6 @@ public class UsuarioController {
         return usuarioRepository.findAll();
     }
 
-
     @PostMapping
     public ResponseEntity<?> crear(@RequestBody CrearUsuarioRequest request, Authentication authentication, HttpServletRequest httpRequest) {
         Rol rol = rolRepository.findById(request.getIdRol())
@@ -41,13 +41,11 @@ public class UsuarioController {
         usuario.setRol(rol);
         usuario.setEstado(true);
 
-        // registrar quién creó al usuario (campo usuarioCreacion del modelo)
         usuarioRepository.findByUsuario(authentication.getName())
                 .ifPresent(usuario::setUsuarioCreacion);
 
         Usuario guardado = usuarioRepository.save(usuario);
 
-        // MEJORA: auditoría de creación (nunca guardamos el password en claro en el log)
         auditoriaService.registrar(
                 auditoriaService.usuarioDesdeAuth(authentication),
                 "Seguridad",
@@ -61,7 +59,6 @@ public class UsuarioController {
 
         return ResponseEntity.ok(guardado);
     }
-
 
     @DeleteMapping("/{id}")
     public ResponseEntity<?> eliminarLogico(@PathVariable Integer id, Authentication authentication, HttpServletRequest request) {
@@ -95,7 +92,6 @@ public class UsuarioController {
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-
     @PutMapping("/{id}")
     public ResponseEntity<?> editar(@PathVariable Integer id, @RequestBody CrearUsuarioRequest request,
                                     Authentication authentication, HttpServletRequest httpRequest) {
@@ -128,5 +124,39 @@ public class UsuarioController {
                     return ResponseEntity.ok(guardado);
                 })
                 .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    @PutMapping("/cambiar-password")
+    public ResponseEntity<?> cambiarPassword(@RequestBody CambiarPasswordRequest request,
+                                             Authentication authentication,
+                                             HttpServletRequest httpRequest) {
+
+        Usuario usuario = usuarioRepository.findByUsuario(authentication.getName())
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
+        // 1. Verificar que la contraseña actual sea correcta
+        if (!passwordEncoder.matches(request.getPasswordActual(), usuario.getPassword())) {
+            return ResponseEntity.badRequest().body("La contraseña actual no es correcta.");
+        }
+
+        // 2. Validar que la nueva no esté vacía / sea igual a la actual (mínimo de sentido común)
+        if (request.getPasswordNueva() == null || request.getPasswordNueva().isBlank()) {
+            return ResponseEntity.badRequest().body("La nueva contraseña no puede estar vacía.");
+        }
+        if (passwordEncoder.matches(request.getPasswordNueva(), usuario.getPassword())) {
+            return ResponseEntity.badRequest().body("La nueva contraseña debe ser diferente a la actual.");
+        }
+
+        // 3. Actualizar con hash + salting (BCrypt), igual que en creación de usuarios
+        usuario.setPassword(passwordEncoder.encode(request.getPasswordNueva()));
+        usuarioRepository.save(usuario);
+
+        // 4. Auditoría (nunca se loguea el password, ni el actual ni el nuevo)
+        auditoriaService.registrar(
+                usuario, "Seguridad", "usuario", "UPDATE", usuario.getIdUsuario(),
+                (String) null, "{\"accion\":\"cambio_password\"}", httpRequest
+        );
+
+        return ResponseEntity.ok().build();
     }
 }

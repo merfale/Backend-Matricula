@@ -34,6 +34,9 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/login").permitAll()
+                        .requestMatchers(org.springframework.http.HttpMethod.PUT, "/api/usuarios/cambiar-password")
+                        .hasAnyRole("SUPERUSUARIO", "DIRECTOR", "SECRETARIA")
+
                         .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/**")
                         .hasAnyRole("SUPERUSUARIO", "DIRECTOR", "SECRETARIA")
                         .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/**")

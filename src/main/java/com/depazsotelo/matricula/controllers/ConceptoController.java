@@ -5,9 +5,12 @@ import com.depazsotelo.matricula.models.Concepto;
 import com.depazsotelo.matricula.repositories.AnioAcademicoRepository;
 import com.depazsotelo.matricula.repositories.ConceptoRepository;
 import com.depazsotelo.matricula.repositories.TipoConceptoRepository;
+import com.depazsotelo.matricula.services.AuditoriaService;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
@@ -19,6 +22,7 @@ public class ConceptoController {
     private final ConceptoRepository conceptoRepository;
     private final AnioAcademicoRepository anioAcademicoRepository;
     private final TipoConceptoRepository tipoConceptoRepository;
+    private final AuditoriaService auditoriaService;
 
     @GetMapping
     public List<Concepto> listar() {
@@ -33,25 +37,50 @@ public class ConceptoController {
     }
 
     @PostMapping
-    public ResponseEntity<?> crear(@RequestBody ConceptoRequest request) {
+    public ResponseEntity<?> crear(@RequestBody ConceptoRequest request, Authentication authentication, HttpServletRequest httpRequest) {
         try {
             Concepto concepto = new Concepto();
             aplicarDatos(concepto, request);
             concepto.setEstado(true);
-            return ResponseEntity.ok(conceptoRepository.save(concepto));
+            Concepto guardado = conceptoRepository.save(concepto);
+
+            auditoriaService.registrar(
+                    auditoriaService.usuarioDesdeAuth(authentication),
+                    "Conceptos", "concepto", "INSERT", guardado.getCodConcepto(),
+                    (Object) null, guardado, httpRequest
+            );
+
+            return ResponseEntity.ok(guardado);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 
-    // MEJORA: respeta el @Version del modelo para evitar sobrescribir cambios concurrentes
     @PutMapping("/{id}")
-    public ResponseEntity<?> editar(@PathVariable Integer id, @RequestBody ConceptoRequest request) {
+    public ResponseEntity<?> editar(@PathVariable Integer id, @RequestBody ConceptoRequest request, Authentication authentication, HttpServletRequest httpRequest) {
         return conceptoRepository.findById(id)
                 .map(existente -> {
                     try {
+                        String antesJson = String.format(
+                                "{\"nombreConcepto\":\"%s\",\"monto\":%s,\"version\":%d}",
+                                existente.getNombreConcepto(), existente.getMonto(), existente.getVersion());
+
                         aplicarDatos(existente, request);
-                        return ResponseEntity.ok(conceptoRepository.save(existente));
+                        Concepto guardado = conceptoRepository.save(existente);
+
+                        String despuesJson = String.format(
+                                "{\"nombreConcepto\":\"%s\",\"monto\":%s,\"version\":%d}",
+                                guardado.getNombreConcepto(), guardado.getMonto(), guardado.getVersion());
+
+                        auditoriaService.registrar(
+                                auditoriaService.usuarioDesdeAuth(authentication),
+                                "Conceptos", "concepto", "UPDATE", guardado.getCodConcepto(),
+                                antesJson,
+                                despuesJson,
+                                httpRequest
+                        );
+
+                        return ResponseEntity.ok(guardado);
                     } catch (OptimisticLockingFailureException e) {
                         return ResponseEntity.status(409).body("El concepto fue modificado por otro usuario, recarga los datos.");
                     } catch (Exception e) {
@@ -62,11 +91,18 @@ public class ConceptoController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> eliminar(@PathVariable Integer id) {
+    public ResponseEntity<?> eliminar(@PathVariable Integer id, Authentication authentication, HttpServletRequest request) {
         return conceptoRepository.findById(id)
                 .map(existente -> {
                     existente.setEstado(false);
-                    conceptoRepository.save(existente);
+                    Concepto guardado = conceptoRepository.save(existente);
+
+                    auditoriaService.registrar(
+                            auditoriaService.usuarioDesdeAuth(authentication),
+                            "Conceptos", "concepto", "DELETE", guardado.getCodConcepto(),
+                            "{\"estado\":true}", "{\"estado\":false}", request
+                    );
+
                     return ResponseEntity.ok().build();
                 })
                 .orElseGet(() -> ResponseEntity.notFound().build());

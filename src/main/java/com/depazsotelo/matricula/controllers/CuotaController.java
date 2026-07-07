@@ -2,8 +2,11 @@ package com.depazsotelo.matricula.controllers;
 
 import com.depazsotelo.matricula.models.Cuota;
 import com.depazsotelo.matricula.repositories.CuotaRepository;
+import com.depazsotelo.matricula.services.AuditoriaService;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import java.math.BigDecimal;
 import java.util.List;
@@ -14,6 +17,7 @@ import java.util.List;
 public class CuotaController {
 
     private final CuotaRepository cuotaRepository;
+    private final AuditoriaService auditoriaService;
 
     @GetMapping
     public List<Cuota> listar() {
@@ -27,30 +31,49 @@ public class CuotaController {
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    // MEJORA: permite corregir el monto de una cuota (solo si sigue PENDIENTE)
     @PutMapping("/{id}")
-    public ResponseEntity<?> editarMonto(@PathVariable Integer id, @RequestBody BigDecimal nuevoMonto) {
+    public ResponseEntity<?> editarMonto(@PathVariable Integer id, @RequestBody BigDecimal nuevoMonto, Authentication authentication, HttpServletRequest request) {
         return cuotaRepository.findById(id)
                 .map(cuota -> {
                     if (!"PENDIENTE".equalsIgnoreCase(cuota.getEstado())) {
                         return ResponseEntity.badRequest().body("Solo se pueden editar cuotas PENDIENTES.");
                     }
+                    BigDecimal montoAnterior = cuota.getMontoCobrado();
                     cuota.setMontoCobrado(nuevoMonto);
-                    return ResponseEntity.ok(cuotaRepository.save(cuota));
+                    Cuota guardada = cuotaRepository.save(cuota);
+
+                    auditoriaService.registrar(
+                            auditoriaService.usuarioDesdeAuth(authentication),
+                            "Pagos", "cuota", "UPDATE", guardada.getCodCuota(),
+                            "{\"montoCobrado\":" + montoAnterior + "}",
+                            "{\"montoCobrado\":" + guardada.getMontoCobrado() + "}",
+                            request
+                    );
+
+                    return ResponseEntity.ok(guardada);
                 })
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    // MEJORA: "eliminar" una cuota = anularla, nunca se paga y no se borra el historial
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> anular(@PathVariable Integer id) {
+    public ResponseEntity<?> anular(@PathVariable Integer id, Authentication authentication, HttpServletRequest request) {
         return cuotaRepository.findById(id)
                 .map(cuota -> {
                     if ("PAGADO".equalsIgnoreCase(cuota.getEstado())) {
                         return ResponseEntity.badRequest().body("No se puede anular una cuota ya pagada.");
                     }
+                    String estadoAnterior = cuota.getEstado();
                     cuota.setEstado("ANULADA");
-                    cuotaRepository.save(cuota);
+                    Cuota guardada = cuotaRepository.save(cuota);
+
+                    auditoriaService.registrar(
+                            auditoriaService.usuarioDesdeAuth(authentication),
+                            "Pagos", "cuota", "DELETE", guardada.getCodCuota(),
+                            "{\"estado\":\"" + estadoAnterior + "\"}",
+                            "{\"estado\":\"ANULADA\"}",
+                            request
+                    );
+
                     return ResponseEntity.ok().build();
                 })
                 .orElseGet(() -> ResponseEntity.notFound().build());

@@ -2,10 +2,10 @@ package com.depazsotelo.matricula.services;
 
 import com.depazsotelo.matricula.models.*;
 import com.depazsotelo.matricula.repositories.*;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.time.LocalDate;
 import java.util.List;
 
@@ -18,25 +18,21 @@ public class MatriculaService {
     private final AulaRepository aulaRepository;
     private final ConceptoRepository conceptoRepository;
     private final CuotaRepository cuotaRepository;
-    private final AuditoriaRepository auditoriaRepository;
+    private final AuditoriaService auditoriaService;
 
-    // Aquí está la magia: Si cualquier línea falla, Spring hace Rollback de todo automáticamente.
     @Transactional(rollbackFor = Exception.class)
-    public Matricula registrarMatriculaTransaccional(Integer codAlumno, Integer codAula, Usuario usuarioRegistro) throws Exception {
+    public Matricula registrarMatriculaTransaccional(Integer codAlumno, Integer codAula, Usuario usuarioRegistro,  HttpServletRequest request) throws Exception {
 
-        // 1. Buscar Alumno y Aula
         Alumno alumno = alumnoRepository.findById(codAlumno)
                 .orElseThrow(() -> new Exception("Alumno no encontrado"));
         Aula aula = aulaRepository.findById(codAula)
                 .orElseThrow(() -> new Exception("Aula no encontrada"));
         AnioAcademico anio = aula.getAnioAcademico();
 
-        // 2. Validar que no esté matriculado ese mismo año
         if (matriculaRepository.existsByAlumnoCodAlumnoAndAnioAcademicoCodAnioAcademico(codAlumno, anio.getCodAnioAcademico())) {
             throw new Exception("El alumno ya se encuentra matriculado en el año " + anio.getAnio());
         }
 
-        // 3. Registrar Matrícula
         Matricula matricula = new Matricula();
         matricula.setAlumno(alumno);
         matricula.setAula(aula);
@@ -57,17 +53,17 @@ public class MatriculaService {
             cuotaRepository.save(cuota);
         }
 
-        // 5. Registrar Auditoría
-        Auditoria auditoria = new Auditoria();
-        auditoria.setUsuario(usuarioRegistro);
-        auditoria.setModulo("Matrícula");
-        auditoria.setTablaAfectada("matricula");
-        auditoria.setOperacion("INSERT");
-        auditoria.setCodigoRegistro(matricula.getCodMatricula());
-        auditoria.setIpOrigen("127.0.0.1"); // Cuando hagamos los controladores lo capturaremos de la red
-        auditoriaRepository.save(auditoria);
+        auditoriaService.registrar(
+                usuarioRegistro,
+                "Matrícula",
+                "matricula",
+                "MATRICULA",
+                matricula.getCodMatricula(),
+                (Object) null,
+                matricula,
+                request
+        );
 
-        // 6. ¡Commit exitoso!
         return matricula;
     }
 }

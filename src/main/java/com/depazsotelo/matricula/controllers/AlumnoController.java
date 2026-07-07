@@ -5,11 +5,13 @@ import com.depazsotelo.matricula.models.Alumno;
 import com.depazsotelo.matricula.models.TipoDocumento;
 import com.depazsotelo.matricula.repositories.AlumnoRepository;
 import com.depazsotelo.matricula.repositories.TipoDocumentoRepository;
+import com.depazsotelo.matricula.services.AuditoriaService;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
 
 @RestController
@@ -19,35 +21,39 @@ public class AlumnoController {
 
     private final AlumnoRepository alumnoRepository;
     private final TipoDocumentoRepository tipoDocumentoRepository;
+    private final AuditoriaService auditoriaService;
 
     @PostMapping("/registrar")
-    public ResponseEntity<?> registrarAlumno(@RequestBody AlumnoRequest request) {
+    public ResponseEntity<?> registrarAlumno(@RequestBody AlumnoRequest request, Authentication authentication, HttpServletRequest httpRequest) {
 
         try {
-            // 1. Validar que el DNI no exista
             if (alumnoRepository.findByNumeroDocumento(request.getNumeroDocumento()).isPresent()) {
                 return ResponseEntity.badRequest().body("Error: El Documento ya está registrado.");
             }
 
-            // 2. Buscar el Tipo de Documento en la BD
             TipoDocumento tipoDoc = tipoDocumentoRepository.findById(request.getCodTipoDocumento())
                     .orElseThrow(() -> new RuntimeException("Error: Tipo de documento no encontrado."));
 
-            // 3. Armar el objeto Alumno
             Alumno nuevoAlumno = new Alumno();
             nuevoAlumno.setTipoDocumento(tipoDoc);
             nuevoAlumno.setNombres(request.getNombres());
             nuevoAlumno.setApellidoPaterno(request.getApellidoPaterno());
             nuevoAlumno.setApellidoMaterno(request.getApellidoMaterno());
 
-            // Cifrado automático gracias al AesEncryptor
             nuevoAlumno.setNumeroDocumento(request.getNumeroDocumento());
             nuevoAlumno.setFechaNacimiento(request.getFechaNacimiento());
 
             nuevoAlumno.setEstado(true);
 
-            // 4. Guardar en BD
             Alumno guardado = alumnoRepository.save(nuevoAlumno);
+
+            auditoriaService.registrar(
+                    auditoriaService.usuarioDesdeAuth(authentication),
+                    "Alumnos", "alumno", "INSERT", guardado.getCodAlumno(),
+                    (String) null,
+                    "{\"nombres\":\"" + guardado.getNombres() + " " + guardado.getApellidoPaterno() + " " + guardado.getApellidoMaterno() + "\"}",
+                    httpRequest
+            );
 
             return ResponseEntity.ok(guardado);
 
@@ -55,19 +61,22 @@ public class AlumnoController {
             return ResponseEntity.internalServerError().body("Error interno: " + e.getMessage());
         }
     }
-    // MEJORA: valida el checkbox "Eliminar" de la funcionalidad "Alumnos" para el rol del usuario logueado
+
     @PreAuthorize("@permisoService.tienePermiso(authentication.name, 'Alumnos', 'eliminar')")
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> eliminar(@PathVariable Integer id) {
-        // ... tu lógica de eliminación lógica existente
+    public ResponseEntity<?> eliminar(@PathVariable Integer id, Authentication authentication, HttpServletRequest request) {
         try {
-            // 1. Buscar el alumno, si no existe devolvemos 404
             Alumno alumno = alumnoRepository.findById(id)
                     .orElseThrow(() -> new RuntimeException("Error: Alumno no encontrado."));
 
-            // 2. Eliminación LÓGICA (no física) — el spec exige esto para mantener el historial
             alumno.setEstado(false);
             alumnoRepository.save(alumno);
+
+            auditoriaService.registrar(
+                    auditoriaService.usuarioDesdeAuth(authentication),
+                    "Alumnos", "alumno", "DELETE", alumno.getCodAlumno(),
+                    "{\"estado\":true}", "{\"estado\":false}", request
+            );
 
             return ResponseEntity.ok().build();
 
@@ -91,19 +100,29 @@ public class AlumnoController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> editar(@PathVariable Integer id, @RequestBody AlumnoRequest request) {
+    public ResponseEntity<?> editar(@PathVariable Integer id, @RequestBody AlumnoRequest request, Authentication authentication, HttpServletRequest httpRequest) {
         return alumnoRepository.findById(id)
                 .map(existente -> {
                     try {
                         TipoDocumento tipoDoc = tipoDocumentoRepository.findById(request.getCodTipoDocumento())
                                 .orElseThrow(() -> new RuntimeException("Tipo de documento no encontrado."));
                         existente.setTipoDocumento(tipoDoc);
-                        existente.setNumeroDocumento(request.getNumeroDocumento()); // se re-cifra solo
+                        existente.setNumeroDocumento(request.getNumeroDocumento());
                         existente.setNombres(request.getNombres());
                         existente.setApellidoPaterno(request.getApellidoPaterno());
                         existente.setApellidoMaterno(request.getApellidoMaterno());
                         existente.setFechaNacimiento(request.getFechaNacimiento());
-                        return ResponseEntity.ok(alumnoRepository.save(existente));
+                        Alumno guardado = alumnoRepository.save(existente);
+
+                        auditoriaService.registrar(
+                                auditoriaService.usuarioDesdeAuth(authentication),
+                                "Alumnos", "alumno", "UPDATE", guardado.getCodAlumno(),
+                                (String) null,
+                                "{\"nombres\":\"" + guardado.getNombres() + " " + guardado.getApellidoPaterno() + " " + guardado.getApellidoMaterno() + "\"}",
+                                httpRequest
+                        );
+
+                        return ResponseEntity.ok(guardado);
                     } catch (RuntimeException e) {
                         return ResponseEntity.badRequest().body(e.getMessage());
                     }

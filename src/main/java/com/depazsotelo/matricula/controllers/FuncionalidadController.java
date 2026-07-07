@@ -2,8 +2,11 @@ package com.depazsotelo.matricula.controllers;
 
 import com.depazsotelo.matricula.models.Funcionalidad;
 import com.depazsotelo.matricula.repositories.FuncionalidadRepository;
+import com.depazsotelo.matricula.services.AuditoriaService;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
@@ -13,9 +16,8 @@ import java.util.List;
 public class FuncionalidadController {
 
     private final FuncionalidadRepository funcionalidadRepository;
+    private final AuditoriaService auditoriaService;
 
-    // MEJORA: solo trae las raíces; el frontend arma el árbol pidiendo los hijos
-    // por cada nodo, o puedes mapear a un DTO recursivo si prefieres un solo request.
     @GetMapping("/raiz")
     public List<Funcionalidad> listarRaiz() {
         return funcionalidadRepository.findByPadreIsNull();
@@ -27,8 +29,18 @@ public class FuncionalidadController {
     }
 
     @PostMapping
-    public Funcionalidad crear(@RequestBody Funcionalidad funcionalidad) {
-        return funcionalidadRepository.save(funcionalidad);
+    public Funcionalidad crear(@RequestBody Funcionalidad funcionalidad, Authentication authentication, HttpServletRequest request) {
+        Funcionalidad guardada = funcionalidadRepository.save(funcionalidad);
+
+        auditoriaService.registrar(
+                auditoriaService.usuarioDesdeAuth(authentication),
+                "Seguridad", "funcionalidad", "INSERT", guardada.getIdFuncionalidad(),
+                (String) null,
+                "{\"nombre\":\"" + guardada.getNombre() + "\"}",
+                request
+        );
+
+        return guardada;
     }
 
     @GetMapping("/{id}")
@@ -39,24 +51,45 @@ public class FuncionalidadController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> editar(@PathVariable Integer id, @RequestBody Funcionalidad request) {
+    public ResponseEntity<?> editar(@PathVariable Integer id, @RequestBody Funcionalidad request, Authentication authentication, HttpServletRequest httpRequest) {
         return funcionalidadRepository.findById(id)
                 .map(existente -> {
+                    String nombreAnterior = existente.getNombre();
                     existente.setNombre(request.getNombre());
                     existente.setIcono(request.getIcono());
                     existente.setPadre(request.getPadre());
-                    return ResponseEntity.ok(funcionalidadRepository.save(existente));
+                    Funcionalidad guardada = funcionalidadRepository.save(existente);
+
+                    auditoriaService.registrar(
+                            auditoriaService.usuarioDesdeAuth(authentication),
+                            "Seguridad", "funcionalidad", "UPDATE", guardada.getIdFuncionalidad(),
+                            "{\"nombre\":\"" + nombreAnterior + "\"}",
+                            "{\"nombre\":\"" + guardada.getNombre() + "\"}",
+                            httpRequest
+                    );
+
+                    return ResponseEntity.ok(guardada);
                 })
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    // Eliminación física: no hay campo "estado" en este modelo (ver nota arriba)
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> eliminar(@PathVariable Integer id) {
-        if (!funcionalidadRepository.existsById(id)) {
-            return ResponseEntity.notFound().build();
-        }
-        funcionalidadRepository.deleteById(id);
-        return ResponseEntity.ok().build();
+    public ResponseEntity<?> eliminar(@PathVariable Integer id, Authentication authentication, HttpServletRequest request) {
+        return funcionalidadRepository.findById(id)
+                .map(existente -> {
+                    String nombreEliminado = existente.getNombre();
+                    funcionalidadRepository.deleteById(id);
+
+                    auditoriaService.registrar(
+                            auditoriaService.usuarioDesdeAuth(authentication),
+                            "Seguridad", "funcionalidad", "DELETE", id,
+                            "{\"nombre\":\"" + nombreEliminado + "\"}",
+                            (String) null,
+                            request
+                    );
+
+                    return ResponseEntity.ok().build();
+                })
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 }

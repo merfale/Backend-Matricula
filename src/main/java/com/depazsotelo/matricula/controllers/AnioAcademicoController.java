@@ -2,8 +2,11 @@ package com.depazsotelo.matricula.controllers;
 
 import com.depazsotelo.matricula.models.AnioAcademico;
 import com.depazsotelo.matricula.repositories.AnioAcademicoRepository;
+import com.depazsotelo.matricula.services.AuditoriaService;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
@@ -12,6 +15,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class AnioAcademicoController {
     private final AnioAcademicoRepository AnioAcademicoRepository;
+    private final AuditoriaService auditoriaService;
 
     @GetMapping
     public List<AnioAcademico> listar() {
@@ -26,29 +30,54 @@ public class AnioAcademicoController {
     }
 
     @PostMapping
-    public ResponseEntity<?> crear(@RequestBody AnioAcademico request) {
-        request.setCodAnioAcademico(null); // por si mandan un id por error
+    public ResponseEntity<?> crear(@RequestBody AnioAcademico request, Authentication authentication, HttpServletRequest httpRequest) {
+        request.setCodAnioAcademico(null);
         request.setEstado(true);
-        return ResponseEntity.ok(AnioAcademicoRepository.save(request));
+        AnioAcademico guardado = AnioAcademicoRepository.save(request);
+
+        auditoriaService.registrar(
+                auditoriaService.usuarioDesdeAuth(authentication),
+                "Matrícula", "anio_academico", "INSERT", guardado.getCodAnioAcademico(),
+                (Object) null, guardado, httpRequest
+        );
+
+        return ResponseEntity.ok(guardado);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> editar(@PathVariable Integer id, @RequestBody AnioAcademico request) {
+    public ResponseEntity<?> editar(@PathVariable Integer id, @RequestBody AnioAcademico request, Authentication authentication, HttpServletRequest httpRequest) {
         return AnioAcademicoRepository.findById(id)
                 .map(existente -> {
+                    String anioAnterior = existente.getAnio();
                     existente.setAnio(request.getAnio());
-                    return ResponseEntity.ok(AnioAcademicoRepository.save(existente));
+                    AnioAcademico guardado = AnioAcademicoRepository.save(existente);
+
+                    auditoriaService.registrar(
+                            auditoriaService.usuarioDesdeAuth(authentication),
+                            "Matrícula", "anio_academico", "UPDATE", guardado.getCodAnioAcademico(),
+                            "{\"anio\":\"" + anioAnterior + "\"}",
+                            "{\"anio\":\"" + guardado.getAnio() + "\"}",
+                            httpRequest
+                    );
+
+                    return ResponseEntity.ok(guardado);
                 })
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    // Eliminación LÓGICA (no física), consistente con el resto del proyecto
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> eliminar(@PathVariable Integer id) {
+    public ResponseEntity<?> eliminar(@PathVariable Integer id, Authentication authentication, HttpServletRequest request) {
         return AnioAcademicoRepository.findById(id)
                 .map(existente -> {
                     existente.setEstado(false);
-                    AnioAcademicoRepository.save(existente);
+                    AnioAcademico guardado = AnioAcademicoRepository.save(existente);
+
+                    auditoriaService.registrar(
+                            auditoriaService.usuarioDesdeAuth(authentication),
+                            "Matrícula", "anio_academico", "DELETE", guardado.getCodAnioAcademico(),
+                            "{\"estado\":true}", "{\"estado\":false}", request
+                    );
+
                     return ResponseEntity.ok().build();
                 })
                 .orElseGet(() -> ResponseEntity.notFound().build());

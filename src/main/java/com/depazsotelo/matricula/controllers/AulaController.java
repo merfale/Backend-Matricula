@@ -6,8 +6,11 @@ import com.depazsotelo.matricula.repositories.AnioAcademicoRepository;
 import com.depazsotelo.matricula.repositories.AulaRepository;
 import com.depazsotelo.matricula.repositories.GradoRepository;
 import com.depazsotelo.matricula.repositories.NivelRepository;
+import com.depazsotelo.matricula.services.AuditoriaService;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
@@ -20,6 +23,7 @@ public class AulaController {
     private final AnioAcademicoRepository anioAcademicoRepository;
     private final NivelRepository nivelRepository;
     private final GradoRepository gradoRepository;
+    private final AuditoriaService auditoriaService;
 
     @GetMapping
     public List<Aula> listar() {
@@ -34,24 +38,40 @@ public class AulaController {
     }
 
     @PostMapping
-    public ResponseEntity<?> crear(@RequestBody AulaRequest request) {
+    public ResponseEntity<?> crear(@RequestBody AulaRequest request, Authentication authentication, HttpServletRequest httpRequest) {
         try {
             Aula aula = new Aula();
             aplicarDatos(aula, request);
             aula.setEstado(true);
-            return ResponseEntity.ok(aulaRepository.save(aula));
+            Aula guardada = aulaRepository.save(aula);
+
+            auditoriaService.registrar(
+                    auditoriaService.usuarioDesdeAuth(authentication),
+                    "Aulas", "aula", "INSERT", guardada.getCodAula(),
+                    (Object) null, guardada, httpRequest
+            );
+
+            return ResponseEntity.ok(guardada);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> editar(@PathVariable Integer id, @RequestBody AulaRequest request) {
+    public ResponseEntity<?> editar(@PathVariable Integer id, @RequestBody AulaRequest request, Authentication authentication, HttpServletRequest httpRequest) {
         return aulaRepository.findById(id)
                 .map(existente -> {
                     try {
                         aplicarDatos(existente, request);
-                        return ResponseEntity.ok(aulaRepository.save(existente));
+                        Aula guardada = aulaRepository.save(existente);
+
+                        auditoriaService.registrar(
+                                auditoriaService.usuarioDesdeAuth(authentication),
+                                "Aulas", "aula", "UPDATE", guardada.getCodAula(),
+                                (Object) null, guardada, httpRequest
+                        );
+
+                        return ResponseEntity.ok(guardada);
                     } catch (Exception e) {
                         return ResponseEntity.badRequest().body(e.getMessage());
                     }
@@ -60,11 +80,18 @@ public class AulaController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> eliminar(@PathVariable Integer id) {
+    public ResponseEntity<?> eliminar(@PathVariable Integer id, Authentication authentication, HttpServletRequest request) {
         return aulaRepository.findById(id)
                 .map(existente -> {
                     existente.setEstado(false);
-                    aulaRepository.save(existente);
+                    Aula guardada = aulaRepository.save(existente);
+
+                    auditoriaService.registrar(
+                            auditoriaService.usuarioDesdeAuth(authentication),
+                            "Aulas", "aula", "DELETE", guardada.getCodAula(),
+                            "{\"estado\":true}", "{\"estado\":false}", request
+                    );
+
                     return ResponseEntity.ok().build();
                 })
                 .orElseGet(() -> ResponseEntity.notFound().build());

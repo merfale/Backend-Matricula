@@ -1,6 +1,7 @@
 package com.depazsotelo.matricula.models;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
 @Data
@@ -12,6 +13,7 @@ public class Funcionalidad {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer idFuncionalidad; // PK
 
+    @NotBlank(message = "El nombre de la funcionalidad es obligatorio")
     @Column(length = 80, unique = true, nullable = false)
     private String nombre; // UK
 

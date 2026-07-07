@@ -1,14 +1,17 @@
 package com.depazsotelo.matricula.dtos;
 
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
-// MEJORA: representa una fila del checkbox de permisos en el frontend
 @Data
 public class PermisoItemRequest {
+
+    @NotNull(message = "Debe indicar la funcionalidad")
     private Integer idFuncionalidad;
-    private Boolean ver;
-    private Boolean crear;
-    private Boolean editar;
-    private Boolean eliminar;
-    private Boolean imprimir;
+
+    @NotNull private Boolean ver;
+    @NotNull private Boolean crear;
+    @NotNull private Boolean editar;
+    @NotNull private Boolean eliminar;
+    @NotNull private Boolean imprimir;
 }

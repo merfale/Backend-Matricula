@@ -18,8 +18,7 @@ import java.util.List;
 public class TipoConceptoController {
 
     private final TipoConceptoRepository tipoConceptoRepository;
-    private final AuditoriaService auditoriaService; // MEJORA: auditoría real
-
+    private final AuditoriaService auditoriaService;
     @PreAuthorize("@permisoService.tienePermiso(authentication.name, 'TiposConcepto', 'ver')")
     @GetMapping
     public List<TipoConcepto> listar() {

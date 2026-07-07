@@ -9,6 +9,28 @@ services:
       - "3308:3306"
     volumes:
       - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-padmin123"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  backend:
+    build: .
+    container_name: matricula_backend
+    depends_on:
+      mysql-db:
+        condition: service_healthy
+    environment:
+
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-db:3306/matriculadb?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=America/Lima
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=admin123
+      - AES_SECRET_KEY=Pr0y3ct0Cripto26
+    ports:
+      - "8081:8081"
+    restart: unless-stopped
 
 volumes:
   mysql_data:

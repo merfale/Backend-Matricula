@@ -2,8 +2,11 @@ package com.depazsotelo.matricula.controllers;
 
 import com.depazsotelo.matricula.models.TipoDocumento;
 import com.depazsotelo.matricula.repositories.TipoDocumentoRepository;
+import com.depazsotelo.matricula.services.AuditoriaService;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
@@ -13,6 +16,7 @@ import java.util.List;
 public class TipoDocumentoController {
 
     private final TipoDocumentoRepository tipoDocumentoRepository;
+    private final AuditoriaService auditoriaService; // MEJORA: auditoría real
 
     @GetMapping
     public List<TipoDocumento> listar() {
@@ -27,29 +31,56 @@ public class TipoDocumentoController {
     }
 
     @PostMapping
-    public ResponseEntity<?> crear(@RequestBody TipoDocumento request) {
+    public ResponseEntity<?> crear(@RequestBody TipoDocumento request, Authentication authentication, HttpServletRequest httpRequest) {
         request.setCodTipoDocumento(null); // por si mandan un id por error
         request.setEstado(true);
-        return ResponseEntity.ok(tipoDocumentoRepository.save(request));
+        TipoDocumento guardado = tipoDocumentoRepository.save(request);
+
+        auditoriaService.registrar(
+                auditoriaService.usuarioDesdeAuth(authentication),
+                "Seguridad", "tipo_documento", "INSERT", guardado.getCodTipoDocumento(),
+                (Object) null, guardado, httpRequest
+        );
+
+        return ResponseEntity.ok(guardado);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> editar(@PathVariable Integer id, @RequestBody TipoDocumento request) {
+    public ResponseEntity<?> editar(@PathVariable Integer id, @RequestBody TipoDocumento request,
+                                    Authentication authentication, HttpServletRequest httpRequest) {
         return tipoDocumentoRepository.findById(id)
                 .map(existente -> {
+                    String nombreAnterior = existente.getNombre();
                     existente.setNombre(request.getNombre());
-                    return ResponseEntity.ok(tipoDocumentoRepository.save(existente));
+                    TipoDocumento guardado = tipoDocumentoRepository.save(existente);
+
+                    auditoriaService.registrar(
+                            auditoriaService.usuarioDesdeAuth(authentication),
+                            "Seguridad", "tipo_documento", "UPDATE", guardado.getCodTipoDocumento(),
+                            "{\"nombre\":\"" + nombreAnterior + "\"}",
+                            "{\"nombre\":\"" + guardado.getNombre() + "\"}",
+                            httpRequest
+                    );
+
+                    return ResponseEntity.ok(guardado);
                 })
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     // Eliminación LÓGICA (no física), consistente con el resto del proyecto
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> eliminar(@PathVariable Integer id) {
+    public ResponseEntity<?> eliminar(@PathVariable Integer id, Authentication authentication, HttpServletRequest request) {
         return tipoDocumentoRepository.findById(id)
                 .map(existente -> {
                     existente.setEstado(false);
-                    tipoDocumentoRepository.save(existente);
+                    TipoDocumento guardado = tipoDocumentoRepository.save(existente);
+
+                    auditoriaService.registrar(
+                            auditoriaService.usuarioDesdeAuth(authentication),
+                            "Seguridad", "tipo_documento", "DELETE", guardado.getCodTipoDocumento(),
+                            "{\"estado\":true}", "{\"estado\":false}", request
+                    );
+
                     return ResponseEntity.ok().build();
                 })
                 .orElseGet(() -> ResponseEntity.notFound().build());

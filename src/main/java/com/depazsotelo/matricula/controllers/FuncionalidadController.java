@@ -48,16 +48,15 @@ public class FuncionalidadController {
         return guardada;
     }
 
-    @PreAuthorize("@permisoService.tienePermiso(authentication.name, 'Funcionalidades', 'editar')")
-    @PutMapping("/{id}")
+    @GetMapping("/{id}")
     public ResponseEntity<?> obtener(@PathVariable Integer id) {
         return funcionalidadRepository.findById(id)
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    @PreAuthorize("@permisoService.tienePermiso(authentication.name, 'Funcionalidades', 'eliminar')")
-    @DeleteMapping("/{id}")
+    @PreAuthorize("@permisoService.tienePermiso(authentication.name, 'Funcionalidades', 'editar')")
+    @PutMapping("/{id}")
     public ResponseEntity<?> editar(@Valid @PathVariable Integer id, @RequestBody Funcionalidad request, Authentication authentication, HttpServletRequest httpRequest) {
         return funcionalidadRepository.findById(id)
                 .map(existente -> {
@@ -80,6 +79,7 @@ public class FuncionalidadController {
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
+    @PreAuthorize("@permisoService.tienePermiso(authentication.name, 'Funcionalidades', 'eliminar')")
     @DeleteMapping("/{id}")
     public ResponseEntity<?> eliminar(@PathVariable Integer id, Authentication authentication, HttpServletRequest request) {
         return funcionalidadRepository.findById(id)

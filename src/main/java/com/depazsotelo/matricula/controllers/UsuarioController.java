@@ -92,6 +92,29 @@ public class UsuarioController {
         return ResponseEntity.ok().build();
     }
 
+    // Rehabilita a un usuario eliminado lógicamente (inverso de eliminarLogico)
+    @PreAuthorize("@permisoService.tienePermiso(authentication.name, 'Usuarios', 'eliminar')")
+    @PutMapping("/{id}/reactivar")
+    public ResponseEntity<?> reactivar(@PathVariable Integer id, Authentication authentication, HttpServletRequest request) {
+        Usuario usuario = usuarioRepository.findById(id).orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
+        usuario.setEstado(true);
+        usuarioRepository.save(usuario);
+
+        auditoriaService.registrar(
+                auditoriaService.usuarioDesdeAuth(authentication),
+                "Seguridad",
+                "usuario",
+                "UPDATE",
+                usuario.getIdUsuario(),
+                "{\"estado\":false}",
+                "{\"estado\":true}",
+                request
+        );
+
+        return ResponseEntity.ok().build();
+    }
+
     @PreAuthorize("@permisoService.tienePermiso(authentication.name, 'Usuarios', 'ver')")
     @GetMapping("/{id}")
     public ResponseEntity<?> obtener(@PathVariable Integer id) {

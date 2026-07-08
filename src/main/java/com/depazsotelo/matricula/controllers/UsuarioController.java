@@ -8,6 +8,7 @@ import com.depazsotelo.matricula.repositories.UsuarioRepository;
 import com.depazsotelo.matricula.services.AuditoriaService;
 import jakarta.servlet.http.HttpServletRequest;
 import com.depazsotelo.matricula.dtos.CambiarPasswordRequest;
+import com.depazsotelo.matricula.dtos.RestablecerPasswordRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -183,6 +184,32 @@ public class UsuarioController {
         auditoriaService.registrar(
                 usuario, "Seguridad", "usuario", "UPDATE", usuario.getIdUsuario(),
                 (String) null, "{\"accion\":\"cambio_password\"}", httpRequest
+        );
+
+        return ResponseEntity.ok().build();
+    }
+
+    @PreAuthorize("hasRole('SUPERUSUARIO')")
+    @PutMapping("/{id}/restablecer-password")
+    public ResponseEntity<?> restablecerPassword(@PathVariable Integer id,
+                                                 @Valid @RequestBody RestablecerPasswordRequest request,
+                                                 Authentication authentication,
+                                                 HttpServletRequest httpRequest) {
+        Usuario usuario = usuarioRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
+        usuario.setPassword(passwordEncoder.encode(request.getPasswordNueva()));
+        usuarioRepository.save(usuario);
+
+        auditoriaService.registrar(
+                auditoriaService.usuarioDesdeAuth(authentication),
+                "Seguridad",
+                "usuario",
+                "UPDATE",
+                usuario.getIdUsuario(),
+                (String) null,
+                "{\"accion\":\"reset_password_admin\",\"usuarioAfectado\":\"" + usuario.getUsuario() + "\"}",
+                httpRequest
         );
 
         return ResponseEntity.ok().build();

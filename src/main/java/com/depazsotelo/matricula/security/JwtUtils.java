@@ -23,6 +23,9 @@ public class JwtUtils {
         return Keys.hmacShaKeyFor(SECRET_KEY.getBytes());
     }
 
+    public long getExpirationMinutes() {
+        return JWT_EXPIRATION / 60000;
+    }
 
     public String generarToken(Usuario usuario) {
         Map<String, Object> claims = new HashMap<>();

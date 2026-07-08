@@ -20,4 +20,9 @@ public class AnioAcademico {
 
     @Column(nullable = false)
     private Boolean estado = true;
+
+    private Integer ultimoCorrelativoRecibo = 0;
+
+    @Version
+    private Integer version;
 }

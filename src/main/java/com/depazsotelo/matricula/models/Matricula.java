@@ -8,7 +8,6 @@ import java.time.LocalDateTime;
 
 @Data
 @Entity
-// Unique Key: Evita que el mismo alumno se matricule dos veces en el mismo año académico
 @Table(name = "matricula", uniqueConstraints = {
         @UniqueConstraint(columnNames = {"cod_alumno", "cod_anio_academico"})
 })
@@ -33,16 +32,17 @@ public class Matricula {
     @Column(nullable = false)
     private LocalDate fechaMatricula;
 
-    // Según la rúbrica puede ser: "activa" o "pendiente"
     @Column(length = 20, nullable = false)
     private String estado;
 
     @CreationTimestamp
     @Column(updatable = false)
-    private LocalDateTime fechaRegistro; // Auditoría
+    private LocalDateTime fechaRegistro;
 
-    // Quién registró la matrícula (ej. la secretaria)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "usuario_registro_id")
     private Usuario usuarioRegistro;
+
+    @Version
+    private Integer version;
 }

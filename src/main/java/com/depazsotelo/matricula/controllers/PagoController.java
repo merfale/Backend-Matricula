@@ -46,8 +46,10 @@ public class PagoController {
 
     @PreAuthorize("@permisoService.tienePermiso(authentication.name, 'Pagos', 'ver')")
     @GetMapping("/lista")
-    public ResponseEntity<?> listarCuotas() {
-        return ResponseEntity.ok(pagoService.listarTodasLasCuotas());
+    public ResponseEntity<?> listarCuotas(
+            @RequestParam(required = false) Integer codAlumno,
+            @RequestParam(required = false) Integer codAnioAcademico) {
+        return ResponseEntity.ok(pagoService.listarCuotas(codAlumno, codAnioAcademico));
     }
 
 }

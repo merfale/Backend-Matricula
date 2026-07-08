@@ -14,7 +14,6 @@ public class AesEncryptor implements AttributeConverter<String, String> {
     private static final String ALGORITHM = "AES";
     private static final String TRANSFORMATION = "AES/CBC/PKCS5Padding";
 
-
     private static final String FIXED_IV = "MatriculaIV_2026";
 
     @Override

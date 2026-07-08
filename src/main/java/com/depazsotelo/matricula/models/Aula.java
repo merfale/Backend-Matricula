@@ -7,7 +7,6 @@ import java.time.LocalDateTime;
 
 @Data
 @Entity
-// ¡Aquí está la magia de la Unique Key Compuesta!
 @Table(name = "aula", uniqueConstraints = {
         @UniqueConstraint(columnNames = {"cod_anio_academico", "cod_nivel", "cod_grado", "seccion"})
 })
@@ -15,30 +14,32 @@ public class Aula {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer codAula; // PK
+    private Integer codAula;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "cod_anio_academico", nullable = false)
-    private AnioAcademico anioAcademico; // FK
+    private AnioAcademico anioAcademico;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "cod_nivel", nullable = false)
-    private Nivel nivel; // FK
+    private Nivel nivel;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "cod_grado", nullable = false)
-    private Grado grado; // FK
+    private Grado grado;
 
     @Column(length = 2, nullable = false)
-    private String seccion; // Ej: "A", "B"
+    private String seccion;
 
     @Column(nullable = false)
-    private Short capacidadMaxima; // Ej: 35 alumnos
+    private Short capacidadMaxima;
 
     @Column(nullable = false)
     private Boolean estado = true;
 
     @CreationTimestamp
     @Column(updatable = false)
-    private LocalDateTime fechaRegistro; // Auditoría
+    private LocalDateTime fechaRegistro;
+    @Version
+    private Integer version;
 }

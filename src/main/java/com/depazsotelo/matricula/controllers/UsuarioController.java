@@ -25,7 +25,7 @@ public class UsuarioController {
     private final UsuarioRepository usuarioRepository;
     private final RolRepository rolRepository;
     private final PasswordEncoder passwordEncoder;
-    private final AuditoriaService auditoriaService; // MEJORA: auditoría real
+    private final AuditoriaService auditoriaService;
 
     @PreAuthorize("@permisoService.tienePermiso(authentication.name, 'Usuarios', 'ver')")
     @GetMapping
@@ -41,7 +41,8 @@ public class UsuarioController {
 
         Usuario usuario = new Usuario();
         usuario.setUsuario(request.getUsuario());
-        usuario.setPassword(passwordEncoder.encode(request.getPassword())); // hash + salting vía BCrypt
+        usuario.setDoc(request.getDoc());
+        usuario.setPassword(passwordEncoder.encode(request.getPassword()));
         usuario.setRol(rol);
         usuario.setEstado(true);
 
@@ -114,6 +115,7 @@ public class UsuarioController {
                     Rol rol = rolRepository.findById(request.getIdRol())
                             .orElseThrow(() -> new RuntimeException("Rol no encontrado"));
                     existente.setUsuario(request.getUsuario());
+                    existente.setDoc(request.getDoc());
                     existente.setRol(rol);
                     Usuario guardado = usuarioRepository.save(existente);
 
@@ -158,7 +160,6 @@ public class UsuarioController {
         usuario.setPassword(passwordEncoder.encode(request.getPasswordNueva()));
         usuarioRepository.save(usuario);
 
-        // 4. Auditoría (nunca se loguea el password, ni el actual ni el nuevo)
         auditoriaService.registrar(
                 usuario, "Seguridad", "usuario", "UPDATE", usuario.getIdUsuario(),
                 (String) null, "{\"accion\":\"cambio_password\"}", httpRequest

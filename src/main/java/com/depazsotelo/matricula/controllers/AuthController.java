@@ -33,26 +33,23 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequest loginRequest, HttpServletRequest request) {
 
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword())
-        );
-
+        Authentication authentication;
+        try {
+            authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword())
+            );
+        } catch (org.springframework.security.core.AuthenticationException e) {
+            return ResponseEntity.status(401).body("Usuario o contraseña incorrectos");
+        }
 
         Usuario usuario = usuarioRepository.findByUsuario(loginRequest.getUsername())
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
-
         String jwt = jwtUtils.generarToken(usuario);
 
         auditoriaService.registrar(
-                usuario,
-                "Seguridad",
-                "usuario",
-                "LOGIN",
-                usuario.getIdUsuario(),
-                (String) null,
-                (String) null,
-                request
+                usuario, "Seguridad", "usuario", "LOGIN", usuario.getIdUsuario(),
+                (String) null, (String) null, request
         );
 
         return ResponseEntity.ok(new JwtResponse(jwt));

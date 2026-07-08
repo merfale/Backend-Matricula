@@ -1,5 +1,6 @@
 package com.depazsotelo.matricula.dtos;
 
+import com.depazsotelo.matricula.util.ParametrosSistema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
@@ -11,6 +12,6 @@ public class CambiarPasswordRequest {
     private String passwordActual;
 
     @NotBlank(message = "La nueva contraseña es obligatoria")
-    @Size(min = 6, message = "La nueva contraseña debe tener al menos 6 caracteres")
+    @Size(min = ParametrosSistema.MIN_LONGITUD_PASSWORD, message = "La nueva contraseña debe tener al menos " + ParametrosSistema.MIN_LONGITUD_PASSWORD + " caracteres")
     private String passwordNueva;
 }

@@ -16,7 +16,7 @@ public class AnioAcademico {
     @NotBlank(message = "El año es obligatorio")
     @Pattern(regexp = "^\\d{4}$", message = "El año debe tener 4 dígitos (Ej: 2026)")
     @Column(length = 4, unique = true, nullable = false)
-    private String anio; // Ej: "2026"
+    private String anio;
 
     @Column(nullable = false)
     private Boolean estado = true;

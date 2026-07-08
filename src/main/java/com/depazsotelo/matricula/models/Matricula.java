@@ -15,19 +15,19 @@ public class Matricula {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer codMatricula; // PK
+    private Integer codMatricula;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "cod_alumno", nullable = false)
-    private Alumno alumno; // FK
+    private Alumno alumno;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "cod_aula", nullable = false)
-    private Aula aula; // FK
+    private Aula aula;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "cod_anio_academico", nullable = false)
-    private AnioAcademico anioAcademico; // FK
+    private AnioAcademico anioAcademico;
 
     @Column(nullable = false)
     private LocalDate fechaMatricula;

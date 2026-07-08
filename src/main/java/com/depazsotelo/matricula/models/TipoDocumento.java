@@ -12,12 +12,12 @@ public class TipoDocumento {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer codTipoDocumento; // PK
+    private Integer codTipoDocumento;
 
     @NotBlank(message = "El nombre es obligatorio")
     @Pattern(regexp = "^[A-Za-zÁÉÍÓÚÑáéíóúñ ]{2,50}$", message = "Solo letras y espacios")
     @Column(length = 20, unique = true, nullable = false)
-    private String nombre; // Ej: DNI, CE
+    private String nombre;
 
     @Column(nullable = false)
     private Boolean estado = true;

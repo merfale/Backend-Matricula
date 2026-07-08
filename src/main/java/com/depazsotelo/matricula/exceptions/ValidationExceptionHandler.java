@@ -9,8 +9,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import java.util.HashMap;
 import java.util.Map;
 
-// MEJORA: intercepta los errores de @Valid en TODOS los controllers y devuelve
-// un JSON claro {campo: mensaje} en vez de la traza larga por defecto de Spring.
+
 @RestControllerAdvice
 public class ValidationExceptionHandler {
 

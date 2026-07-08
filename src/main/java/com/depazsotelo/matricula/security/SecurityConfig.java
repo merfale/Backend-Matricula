@@ -52,7 +52,7 @@ public class SecurityConfig {
         return http.build();
     }
 
-    // 2. LE DECIMOS EXACTAMENTE A QUIÉN DEJAR PASAR
+
     @Bean
     CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();

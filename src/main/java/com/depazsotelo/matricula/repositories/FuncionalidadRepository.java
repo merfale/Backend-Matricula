@@ -8,6 +8,6 @@ import java.util.List;
 
 @Repository
 public interface FuncionalidadRepository extends JpaRepository<Funcionalidad, Integer> {
-    // MEJORA: trae las funcionalidades raíz (sin padre) para armar el Tree JS desde el nivel superior
+
     List<Funcionalidad> findByPadreIsNull();
 }

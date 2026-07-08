@@ -16,7 +16,7 @@ public class Nivel {
     @NotBlank(message = "El nombre es obligatorio")
     @Pattern(regexp = "^[A-Za-zÁÉÍÓÚÑáéíóúñ ]{2,50}$", message = "Solo letras y espacios")
     @Column(length = 50, unique = true, nullable = false)
-    private String nombre; // Ej: "Inicial", "Primaria", "Secundaria"
+    private String nombre;
 
     @Column(nullable = false)
     private Boolean estado = true;

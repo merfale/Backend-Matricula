@@ -16,7 +16,7 @@ public class Grado {
     @NotBlank(message = "El nombre es obligatorio")
     @Pattern(regexp = "^[A-Za-z0-9°º ]{1,50}$", message = "Formato inválido para el grado")
     @Column(length = 50, unique = true, nullable = false)
-    private String nombre; // Ej: "1°", "3 años"
+    private String nombre;
 
     @Column(nullable = false)
     private Boolean estado = true;

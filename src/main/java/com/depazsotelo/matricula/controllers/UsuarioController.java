@@ -25,7 +25,7 @@ public class UsuarioController {
     private final UsuarioRepository usuarioRepository;
     private final RolRepository rolRepository;
     private final PasswordEncoder passwordEncoder;
-    private final AuditoriaService auditoriaService; // MEJORA: auditoría real
+    private final AuditoriaService auditoriaService;
 
     @PreAuthorize("@permisoService.tienePermiso(authentication.name, 'Usuarios', 'ver')")
     @GetMapping
@@ -41,7 +41,7 @@ public class UsuarioController {
 
         Usuario usuario = new Usuario();
         usuario.setUsuario(request.getUsuario());
-        usuario.setPassword(passwordEncoder.encode(request.getPassword())); // hash + salting vía BCrypt
+        usuario.setPassword(passwordEncoder.encode(request.getPassword()));
         usuario.setRol(rol);
         usuario.setEstado(true);
 
@@ -141,12 +141,12 @@ public class UsuarioController {
         Usuario usuario = usuarioRepository.findByUsuario(authentication.getName())
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
-        // 1. Verificar que la contraseña actual sea correcta
+
         if (!passwordEncoder.matches(request.getPasswordActual(), usuario.getPassword())) {
             return ResponseEntity.badRequest().body("La contraseña actual no es correcta.");
         }
 
-        // 2. Validar que la nueva no esté vacía / sea igual a la actual (mínimo de sentido común)
+
         if (request.getPasswordNueva() == null || request.getPasswordNueva().isBlank()) {
             return ResponseEntity.badRequest().body("La nueva contraseña no puede estar vacía.");
         }
@@ -154,11 +154,11 @@ public class UsuarioController {
             return ResponseEntity.badRequest().body("La nueva contraseña debe ser diferente a la actual.");
         }
 
-        // 3. Actualizar con hash + salting (BCrypt), igual que en creación de usuarios
+
         usuario.setPassword(passwordEncoder.encode(request.getPasswordNueva()));
         usuarioRepository.save(usuario);
 
-        // 4. Auditoría (nunca se loguea el password, ni el actual ni el nuevo)
+
         auditoriaService.registrar(
                 usuario, "Seguridad", "usuario", "UPDATE", usuario.getIdUsuario(),
                 (String) null, "{\"accion\":\"cambio_password\"}", httpRequest

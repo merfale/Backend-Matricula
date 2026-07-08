@@ -10,17 +10,16 @@ public class RolFuncionalidad {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer idRolFuncionalidad; // PK
-
+    private Integer idRolFuncionalidad;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_rol", nullable = false)
-    private Rol rol; // FK a tabla Rol
+    private Rol rol;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_funcionalidad", nullable = false)
-    private Funcionalidad funcionalidad; // FK a tabla Funcionalidad
+    private Funcionalidad funcionalidad;
 
-    // Los permisos específicos mediante CheckBox
+
     @Column(nullable = false)
     private Boolean ver = false;
 

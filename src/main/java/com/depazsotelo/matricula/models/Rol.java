@@ -5,14 +5,14 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import lombok.Data;
 
-@Data // Lombok nos genera los Getters y Setters automáticamente
+@Data
 @Entity
 @Table(name = "rol")
 public class Rol {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer idRol; // PK
+    private Integer idRol;
 
     @NotBlank(message = "El nombre del rol es obligatorio")
     @Pattern(regexp = "^[A-Za-zÁÉÍÓÚÑáéíóúñ ]{3,40}$", message = "El nombre del rol solo puede contener letras y espacios")
@@ -20,5 +20,5 @@ public class Rol {
     private String nombreRol;
 
     @Column(nullable = false)
-    private Boolean estado = true; // Para la eliminación lógica
+    private Boolean estado = true;
 }

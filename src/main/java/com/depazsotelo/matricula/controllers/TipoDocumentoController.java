@@ -18,7 +18,7 @@ import java.util.List;
 public class TipoDocumentoController {
 
     private final TipoDocumentoRepository tipoDocumentoRepository;
-    private final AuditoriaService auditoriaService; // MEJORA: auditoría real
+    private final AuditoriaService auditoriaService;
 
     @PreAuthorize("@permisoService.tienePermiso(authentication.name, 'TiposDocumento', 'ver')")
     @GetMapping
@@ -37,7 +37,7 @@ public class TipoDocumentoController {
     @PreAuthorize("@permisoService.tienePermiso(authentication.name, 'TiposDocumento', 'crear')")
     @PostMapping
     public ResponseEntity<?> crear(@Valid @RequestBody TipoDocumento request, Authentication authentication, HttpServletRequest httpRequest) {
-        request.setCodTipoDocumento(null); // por si mandan un id por error
+        request.setCodTipoDocumento(null);
         request.setEstado(true);
         TipoDocumento guardado = tipoDocumentoRepository.save(request);
 

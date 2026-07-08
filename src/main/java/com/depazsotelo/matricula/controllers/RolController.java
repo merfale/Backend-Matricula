@@ -17,7 +17,7 @@ import java.util.List;
 public class RolController {
 
     private final RolRepository rolRepository;
-    private final AuditoriaService auditoriaService; // MEJORA: auditoría real
+    private final AuditoriaService auditoriaService;
 
     @PreAuthorize("@permisoService.tienePermiso(authentication.name, 'Roles', 'ver')")
     @GetMapping

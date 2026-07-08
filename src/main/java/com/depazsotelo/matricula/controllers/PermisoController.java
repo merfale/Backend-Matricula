@@ -35,7 +35,7 @@ public class PermisoController {
         try {
             permisoService.aplicarPermisos(request);
 
-            // MEJORA: auditamos el "Aplicar" completo (afecta a varias filas de rol_funcionalidad a la vez)
+
             auditoriaService.registrar(
                     auditoriaService.usuarioDesdeAuth(authentication),
                     "Permisos",

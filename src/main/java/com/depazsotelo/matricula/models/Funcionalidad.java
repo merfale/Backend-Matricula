@@ -11,7 +11,7 @@ public class Funcionalidad {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer idFuncionalidad; // PK
+    private Integer idFuncionalidad;
 
     @NotBlank(message = "El nombre de la funcionalidad es obligatorio")
     @Column(length = 80, unique = true, nullable = false)
@@ -20,8 +20,8 @@ public class Funcionalidad {
     @Column(length = 60)
     private String icono;
 
-    // Auto-referencia para construir el Tree JavaScript del menú
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "padre_id")
-    private Funcionalidad padre; // FK a la misma tabla
+    private Funcionalidad padre;
 }

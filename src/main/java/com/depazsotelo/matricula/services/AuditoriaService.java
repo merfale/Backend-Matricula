@@ -10,9 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
-// MEJORA: centraliza el registro de auditoría para que TODOS los módulos
-// (Matrícula, Pago, Login, etc.) lo usen igual, en vez de que cada servicio
-// arme su propio objeto Auditoria a mano.
+
 @Service
 @RequiredArgsConstructor
 public class AuditoriaService {

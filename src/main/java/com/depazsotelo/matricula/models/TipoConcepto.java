@@ -12,12 +12,12 @@ public class TipoConcepto {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer codTipoConcepto; // PK
+    private Integer codTipoConcepto;
 
     @NotBlank(message = "El nombre es obligatorio")
     @Pattern(regexp = "^[A-Za-zÁÉÍÓÚÑáéíóúñ ]{2,50}$", message = "Solo letras y espacios")
     @Column(length = 50, unique = true, nullable = false)
-    private String nombre; // Ej: Fijo, Mensual, Opcional
+    private String nombre;
 
     @Column(nullable = false)
     private Boolean estado = true;

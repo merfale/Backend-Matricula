@@ -28,7 +28,7 @@ public class DataSeeder implements CommandLineRunner {
     @Override
     public void run(String... args) throws Exception {
 
-        // 1. Sembrar Tipo de Documento
+
         if (tipoDocumentoRepository.count() == 0) {
             TipoDocumento dni = new TipoDocumento();
             dni.setNombre("DNI");
@@ -37,10 +37,10 @@ public class DataSeeder implements CommandLineRunner {
             System.out.println("✅ Documento DNI creado (ID: 1)");
         }
 
-        // 2. Sembrar Roles y Usuarios del sistema
+
         if (rolRepository.count() == 0) {
 
-            // MEJORA: los 3 roles que exige el spec (antes solo existía "ADMIN")
+
             Rol rolSuperusuario = new Rol();
             rolSuperusuario.setNombreRol("SUPERUSUARIO");
             rolSuperusuario.setEstado(true);
@@ -56,7 +56,7 @@ public class DataSeeder implements CommandLineRunner {
             rolSecretaria.setEstado(true);
             rolSecretaria = rolRepository.save(rolSecretaria);
 
-            // Usuario Superusuario (acceso total, no se puede eliminar)
+
             Usuario superusuario = new Usuario();
             superusuario.setUsuario("admin");
             superusuario.setPassword(passwordEncoder.encode("admin123"));
@@ -65,7 +65,7 @@ public class DataSeeder implements CommandLineRunner {
             usuarioRepository.save(superusuario);
             System.out.println("✅ Usuario SUPERUSUARIO creado (ID: 1)");
 
-            // Usuario Director (solo consulta)
+
             Usuario director = new Usuario();
             director.setUsuario("director");
             director.setPassword(passwordEncoder.encode("director123"));
@@ -74,7 +74,7 @@ public class DataSeeder implements CommandLineRunner {
             usuarioRepository.save(director);
             System.out.println("✅ Usuario DIRECTOR creado (ID: 2)");
 
-            // Usuario Secretaria (todas las operaciones)
+
             Usuario secretaria = new Usuario();
             secretaria.setUsuario("secretaria");
             secretaria.setPassword(passwordEncoder.encode("secretaria123"));
@@ -84,7 +84,7 @@ public class DataSeeder implements CommandLineRunner {
             System.out.println("✅ Usuario SECRETARIA creado (ID: 3)");
         }
 
-        // 3. Sembrar Estructura de Aula (Año, Nivel, Grado)
+
         if (anioAcademicoRepository.count() == 0) {
             AnioAcademico anio2026 = new AnioAcademico();
             anio2026.setAnio("2026");
@@ -101,7 +101,7 @@ public class DataSeeder implements CommandLineRunner {
             primero.setEstado(true);
             primero = gradoRepository.save(primero);
 
-            // Creamos el Aula 1: 1° de Secundaria - Sección A - Año 2026
+
             Aula aula1 = new Aula();
             aula1.setAnioAcademico(anio2026);
             aula1.setNivel(secundaria);
@@ -112,7 +112,7 @@ public class DataSeeder implements CommandLineRunner {
             aulaRepository.save(aula1);
             System.out.println("✅ Aula 1° Secundaria 'A' 2026 creada (ID: 1)");
 
-            // 4. Sembrar Conceptos de Pago para este año académico
+
             TipoConcepto fijo = new TipoConcepto();
             fijo.setNombre("FIJO");
             fijo = tipoConceptoRepository.save(fijo);
@@ -121,7 +121,7 @@ public class DataSeeder implements CommandLineRunner {
             mensual.setNombre("MENSUAL");
             mensual = tipoConceptoRepository.save(mensual);
 
-            // Concepto: Derecho de Matrícula (Se paga primero)
+
             Concepto matriculaConcepto = new Concepto();
             matriculaConcepto.setAnioAcademico(anio2026);
             matriculaConcepto.setTipoConcepto(fijo);
@@ -131,7 +131,7 @@ public class DataSeeder implements CommandLineRunner {
             matriculaConcepto.setObligatorio(true);
             conceptoRepository.save(matriculaConcepto);
 
-            // Concepto: Pensión de Marzo (Se paga segundo)
+
             Concepto marzoConcepto = new Concepto();
             marzoConcepto.setAnioAcademico(anio2026);
             marzoConcepto.setTipoConcepto(mensual);
@@ -143,8 +143,7 @@ public class DataSeeder implements CommandLineRunner {
             System.out.println("✅ Tarifario y Conceptos de Pago 2026 sembrados con éxito");
         }
 
-        // 5. Sembrar Funcionalidades base + permisos por defecto para Director y Secretaria.
-// Superusuario no necesita filas: PermisoService.tienePermiso() ya lo deja pasar siempre.
+
         if (funcionalidadRepository.count() == 0) {
 
             String[] nombresFuncionalidades = {
@@ -163,7 +162,7 @@ public class DataSeeder implements CommandLineRunner {
                 funcionalidad.setNombre(nombre);
                 funcionalidad = funcionalidadRepository.save(funcionalidad);
 
-                // DIRECTOR: solo consulta
+
                 RolFuncionalidad permisoDirector = new RolFuncionalidad();
                 permisoDirector.setRol(rolDirector);
                 permisoDirector.setFuncionalidad(funcionalidad);
@@ -174,7 +173,7 @@ public class DataSeeder implements CommandLineRunner {
                 permisoDirector.setImprimir(false);
                 rolFuncionalidadRepository.save(permisoDirector);
 
-                // SECRETARIA: todas las operaciones
+
                 RolFuncionalidad permisoSecretaria = new RolFuncionalidad();
                 permisoSecretaria.setRol(rolSecretaria);
                 permisoSecretaria.setFuncionalidad(funcionalidad);

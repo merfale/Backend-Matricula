@@ -43,5 +43,5 @@ public class Alumno {
 
     @CreationTimestamp
     @Column(updatable = false)
-    private LocalDateTime fechaRegistro; // Auditoría
+    private LocalDateTime fechaRegistro;
 }

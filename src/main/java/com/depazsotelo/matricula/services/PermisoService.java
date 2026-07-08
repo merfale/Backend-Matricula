@@ -17,7 +17,7 @@ public class PermisoService {
     private final FuncionalidadRepository funcionalidadRepository;
     private final UsuarioRepository usuarioRepository;
 
-    // MEJORA: guarda/actualiza todos los checkboxes de un rol de una sola vez (botón "Aplicar")
+
     @Transactional
     public void aplicarPermisos(AplicarPermisosRequest request) throws Exception {
         Rol rol = rolRepository.findById(request.getIdRol())
@@ -27,7 +27,7 @@ public class PermisoService {
             Funcionalidad funcionalidad = funcionalidadRepository.findById(item.getIdFuncionalidad())
                     .orElseThrow(() -> new Exception("Funcionalidad no encontrada: " + item.getIdFuncionalidad()));
 
-            // MEJORA: si ya existe el permiso para ese rol+funcionalidad, lo actualiza; si no, lo crea
+
             RolFuncionalidad rf = rolFuncionalidadRepository
                     .findByRolIdRolAndFuncionalidadIdFuncionalidad(rol.getIdRol(), funcionalidad.getIdFuncionalidad())
                     .orElse(new RolFuncionalidad());
@@ -49,7 +49,7 @@ public class PermisoService {
         Usuario usuario = usuarioRepository.findByUsuario(username).orElse(null);
         if (usuario == null) return false;
 
-        // El Superusuario siempre pasa (acceso total, según el spec)
+
         if ("SUPERUSUARIO".equalsIgnoreCase(usuario.getRol().getNombreRol())) return true;
 
         return rolFuncionalidadRepository.findByRolIdRol(usuario.getRol().getIdRol()).stream()

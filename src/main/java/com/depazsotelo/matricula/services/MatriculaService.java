@@ -6,8 +6,10 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -34,6 +36,26 @@ public class MatriculaService {
 
         if (matriculaRepository.existsByAlumnoCodAlumnoAndAnioAcademicoCodAnioAcademico(codAlumno, anio.getCodAnioAcademico())) {
             throw new Exception("El alumno ya se encuentra matriculado en el año " + anio.getAnio());
+        }
+
+        List<Cuota> cuotasPendientes = cuotaRepository
+                .findByMatricula_Alumno_CodAlumnoAndEstado(codAlumno, "PENDIENTE");
+
+        if (!cuotasPendientes.isEmpty()) {
+            BigDecimal totalDeuda = cuotasPendientes.stream()
+                    .map(Cuota::getMontoCobrado)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+            String aniosConDeuda = cuotasPendientes.stream()
+                    .map(c -> c.getMatricula().getAnioAcademico().getAnio())
+                    .distinct()
+                    .sorted()
+                    .collect(Collectors.joining(", "));
+
+            throw new Exception("No se puede matricular: el alumno tiene deuda pendiente de S/ "
+                    + totalDeuda + " correspondiente al(los) año(s) " + aniosConDeuda
+                    + ". Debe regularizar los pagos anteriores antes de matricularse en "
+                    + anio.getAnio() + ".");
         }
 
 

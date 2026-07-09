@@ -21,4 +21,5 @@ public interface CuotaRepository extends JpaRepository<Cuota, Integer> {
     List<Cuota> findByMatricula_Alumno_CodAlumnoAndMatricula_AnioAcademico_CodAnioAcademico(
             Integer codAlumno, Integer codAnioAcademico
     );
+    List<Cuota> findByMatricula_Alumno_CodAlumnoAndEstado(Integer codAlumno, String estado);
 }

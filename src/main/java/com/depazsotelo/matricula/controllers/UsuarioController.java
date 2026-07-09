@@ -90,6 +90,34 @@ public class UsuarioController {
 
         return ResponseEntity.ok().build();
     }
+
+    @PreAuthorize("@permisoService.tienePermiso(authentication.name, 'Usuarios', 'eliminar')")
+    @PutMapping("/{id}/desbloquear")
+    public ResponseEntity<?> desbloquear(@PathVariable Integer id, Authentication authentication, HttpServletRequest request) {
+        Usuario usuario = usuarioRepository.findById(id).orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
+        if (usuario.getBloqueadoHasta() == null && (usuario.getIntentosFallidos() == null || usuario.getIntentosFallidos() == 0)) {
+            return ResponseEntity.badRequest().body("El usuario no se encuentra bloqueado.");
+        }
+
+        usuario.setBloqueadoHasta(null);
+        usuario.setIntentosFallidos(0);
+        usuarioRepository.save(usuario);
+
+        auditoriaService.registrar(
+                auditoriaService.usuarioDesdeAuth(authentication),
+                "Seguridad",
+                "usuario",
+                "DESBLOQUEO",
+                usuario.getIdUsuario(),
+                "{\"accion\":\"desbloqueo_manual\"}",
+                "{\"bloqueadoHasta\":null,\"intentosFallidos\":0}",
+                request
+        );
+
+        return ResponseEntity.ok().build();
+    }
+
     @PreAuthorize("@permisoService.tienePermiso(authentication.name, 'Usuarios', 'eliminar')")
     @PutMapping("/{id}/reactivar")
     public ResponseEntity<?> reactivar(@PathVariable Integer id, Authentication authentication, HttpServletRequest request) {

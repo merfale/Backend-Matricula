@@ -22,6 +22,8 @@ public class ParametroController {
     public Map<String, Object> listar() {
         Map<String, Object> parametros = new LinkedHashMap<>();
         parametros.put("minLongitudPassword", ParametrosSistema.MIN_LONGITUD_PASSWORD);
+        parametros.put("maxIntentosFallidos", ParametrosSistema.MAX_INTENTOS_FALLIDOS);
+        parametros.put("minutosBloqueo", ParametrosSistema.MINUTOS_BLOQUEO);
         parametros.put("expiracionSesionMinutos", jwtUtils.getExpirationMinutes());
         parametros.put("vacantesPorAulaInfo", "La capacidad máxima se configura por cada aula en el módulo Aulas (campo capacidadMaxima), no es un valor global.");
         return parametros;

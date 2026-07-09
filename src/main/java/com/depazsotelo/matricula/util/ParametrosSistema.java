@@ -9,4 +9,8 @@ public final class ParametrosSistema {
     }
 
     public static final int MIN_LONGITUD_PASSWORD = 6;
+
+
+    public static final int MAX_INTENTOS_FALLIDOS = 5;
+    public static final int MINUTOS_BLOQUEO = 15;
 }

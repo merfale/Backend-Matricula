@@ -37,6 +37,10 @@ public class Usuario {
     @Column(length = 100)
     private String secret2FA;
 
+    @Column(nullable = false)
+    private Integer intentosFallidos = 0;
+    private LocalDateTime bloqueadoHasta;
+
     @UpdateTimestamp
     private LocalDateTime fechaModificacion;
 

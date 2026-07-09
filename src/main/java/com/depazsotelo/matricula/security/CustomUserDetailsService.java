@@ -10,6 +10,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.Collections;
 
 @Service
@@ -24,10 +25,16 @@ public class CustomUserDetailsService implements UserDetailsService {
         Usuario usuario = usuarioRepository.findByUsuario(username)
                 .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado: " + username));
 
+        boolean cuentaNoBloqueada = usuario.getBloqueadoHasta() == null
+                || !usuario.getBloqueadoHasta().isAfter(LocalDateTime.now());
 
         return new User(
                 usuario.getUsuario(),
                 usuario.getPassword(),
+                Boolean.TRUE.equals(usuario.getEstado()),
+                true,
+                true,
+                cuentaNoBloqueada,
                 Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + usuario.getRol().getNombreRol()))
         );
     }

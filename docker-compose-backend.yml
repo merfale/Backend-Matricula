@@ -1,0 +1,13 @@
+services:
+  backend:
+    build: .
+    container_name: matricula_backend
+    environment:
+      - TZ=America/Lima
+      - SPRING_DATASOURCE_URL=jdbc:mysql://192.168.100.90:3308/matriculadb?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=America/Lima
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=admin123
+      - AES_SECRET_KEY=Pr0y3ct0Cripto26
+    ports:
+      - "8081:8081"
+    restart: unless-stopped

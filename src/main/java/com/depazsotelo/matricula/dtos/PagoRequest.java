@@ -8,4 +8,6 @@ public class PagoRequest {
 
     @NotNull(message = "Debe indicar la cuota a pagar")
     private Integer codCuota;
+
+    private String metodoPago = "EFECTIVO";
 }

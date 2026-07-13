@@ -2,7 +2,10 @@ package com.depazsotelo.matricula.services;
 
 import com.depazsotelo.matricula.models.AnioAcademico;
 import com.depazsotelo.matricula.models.Cuota;
+import com.depazsotelo.matricula.models.Pago;
+import com.depazsotelo.matricula.models.Usuario;
 import com.depazsotelo.matricula.repositories.CuotaRepository;
+import com.depazsotelo.matricula.repositories.PagoRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,18 +17,18 @@ import java.util.List;
 public class PagoService {
 
     private final CuotaRepository cuotaRepository;
+    private final PagoRepository pagoRepository;
+    private final DeudaService deudaService;
 
     @Transactional(rollbackFor = Exception.class)
-    public Cuota registrarPago(Integer codCuota) throws Exception {
+    public Cuota registrarPago(Integer codCuota, String metodoPago, Usuario usuarioRegistro) throws Exception {
 
         Cuota cuota = cuotaRepository.findById(codCuota)
                 .orElseThrow(() -> new Exception("Error: La cuota especificada no existe."));
 
-
         if (!"PENDIENTE".equalsIgnoreCase(cuota.getEstado())) {
             throw new Exception("Operación rechazada: La cuota ya está pagada o anulada.");
         }
-
 
         boolean tieneDeudasAnteriores = cuotaRepository.existsByMatriculaCodMatriculaAndConceptoOrdenPagoLessThanAndEstado(
                 cuota.getMatricula().getCodMatricula(),
@@ -40,8 +43,19 @@ public class PagoService {
         cuota.setEstado("PAGADO");
         cuota.setFechaPago(LocalDateTime.now());
         cuota.setRecibo(generarRecibo(cuota.getMatricula().getAnioAcademico()));
+        cuota = cuotaRepository.save(cuota);
 
-        return cuotaRepository.save(cuota);
+        Pago pago = new Pago();
+        pago.setCuota(cuota);
+        pago.setMontoPagado(cuota.getMontoCobrado());
+        pago.setMetodoPago(metodoPago == null || metodoPago.isBlank() ? "EFECTIVO" : metodoPago);
+        pago.setRecibo(cuota.getRecibo());
+        pago.setUsuarioRegistro(usuarioRegistro);
+        pagoRepository.save(pago);
+
+        deudaService.recalcularDeuda(cuota.getMatricula());
+
+        return cuota;
     }
 
     private String generarRecibo(AnioAcademico anioAcademico) {

@@ -2,6 +2,8 @@ package com.depazsotelo.matricula.controllers;
 
 import com.depazsotelo.matricula.dtos.PagoRequest;
 import com.depazsotelo.matricula.models.Cuota;
+import com.depazsotelo.matricula.models.Usuario;
+import com.depazsotelo.matricula.repositories.PagoRepository;
 import com.depazsotelo.matricula.services.AuditoriaService;
 import com.depazsotelo.matricula.services.PagoService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -18,18 +20,19 @@ import org.springframework.security.access.prepost.PreAuthorize;
 public class PagoController {
 
     private final PagoService pagoService;
-    private final AuditoriaService auditoriaService; // MEJORA: auditoría real (operación "PAGO" del spec)
+    private final PagoRepository pagoRepository;
+    private final AuditoriaService auditoriaService;
 
     @PreAuthorize("@permisoService.tienePermiso(authentication.name, 'Pagos', 'editar')")
     @PostMapping("/procesar")
     public ResponseEntity<?> procesarPago(@Valid @RequestBody PagoRequest request, Authentication authentication, HttpServletRequest httpRequest) {
         try {
+            Usuario usuario = auditoriaService.usuarioDesdeAuth(authentication);
 
-            Cuota cuotaPagada = pagoService.registrarPago(request.getCodCuota());
-
+            Cuota cuotaPagada = pagoService.registrarPago(request.getCodCuota(), request.getMetodoPago(), usuario);
 
             auditoriaService.registrar(
-                    auditoriaService.usuarioDesdeAuth(authentication),
+                    usuario,
                     "Pagos", "cuota", "PAGO", cuotaPagada.getCodCuota(),
                     "{\"estado\":\"PENDIENTE\"}",
                     "{\"estado\":\"PAGADO\",\"recibo\":\"" + cuotaPagada.getRecibo() + "\"}",
@@ -39,7 +42,6 @@ public class PagoController {
             return ResponseEntity.ok(cuotaPagada);
 
         } catch (Exception e) {
-
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
@@ -52,4 +54,9 @@ public class PagoController {
         return ResponseEntity.ok(pagoService.listarCuotas(codAlumno, codAnioAcademico));
     }
 
+    @PreAuthorize("@permisoService.tienePermiso(authentication.name, 'Pagos', 'ver')")
+    @GetMapping("/historial/{codCuota}")
+    public ResponseEntity<?> historialPago(@PathVariable Integer codCuota) {
+        return ResponseEntity.ok(pagoRepository.findByCuotaCodCuota(codCuota));
+    }
 }

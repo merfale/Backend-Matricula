@@ -7,6 +7,7 @@ import com.depazsotelo.matricula.repositories.AulaRepository;
 import com.depazsotelo.matricula.repositories.GradoRepository;
 import com.depazsotelo.matricula.repositories.NivelRepository;
 import com.depazsotelo.matricula.services.AuditoriaService;
+import com.depazsotelo.matricula.services.VacanteService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +27,7 @@ public class AulaController {
     private final NivelRepository nivelRepository;
     private final GradoRepository gradoRepository;
     private final AuditoriaService auditoriaService;
+    private final VacanteService vacanteService;
 
     @PreAuthorize("@permisoService.tienePermiso(authentication.name, 'Aulas', 'ver')")
     @GetMapping
@@ -50,6 +52,8 @@ public class AulaController {
             aula.setEstado(true);
             Aula guardada = aulaRepository.save(aula);
 
+            vacanteService.sincronizarCapacidad(guardada);
+
             auditoriaService.registrar(
                     auditoriaService.usuarioDesdeAuth(authentication),
                     "Aulas", "aula", "INSERT", guardada.getCodAula(),
@@ -70,6 +74,8 @@ public class AulaController {
                     try {
                         aplicarDatos(existente, request);
                         Aula guardada = aulaRepository.save(existente);
+
+                        vacanteService.sincronizarCapacidad(guardada);
 
                         auditoriaService.registrar(
                                 auditoriaService.usuarioDesdeAuth(authentication),

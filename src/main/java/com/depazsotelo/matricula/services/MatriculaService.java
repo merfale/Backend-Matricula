@@ -21,18 +21,18 @@ public class MatriculaService {
     private final ConceptoRepository conceptoRepository;
     private final CuotaRepository cuotaRepository;
     private final AuditoriaService auditoriaService;
+    private final VacanteService vacanteService;
+    private final DeudaService deudaService;
 
     @Transactional(rollbackFor = Exception.class)
     public Matricula registrarMatriculaTransaccional(Integer codAlumno, Integer codAula, Usuario usuarioRegistro,
                                                      HttpServletRequest request) throws Exception {
-
 
         Alumno alumno = alumnoRepository.findById(codAlumno)
                 .orElseThrow(() -> new Exception("Alumno no encontrado"));
         Aula aula = aulaRepository.findById(codAula)
                 .orElseThrow(() -> new Exception("Aula no encontrada"));
         AnioAcademico anio = aula.getAnioAcademico();
-
 
         if (matriculaRepository.existsByAlumnoCodAlumnoAndAnioAcademicoCodAnioAcademico(codAlumno, anio.getCodAnioAcademico())) {
             throw new Exception("El alumno ya se encuentra matriculado en el año " + anio.getAnio());
@@ -58,13 +58,8 @@ public class MatriculaService {
                     + anio.getAnio() + ".");
         }
 
-
-        long matriculasActivas = matriculaRepository.countByAulaCodAulaAndEstado(codAula, "activa");
-        if (matriculasActivas >= aula.getCapacidadMaxima()) {
-            throw new Exception("El aula no tiene vacantes disponibles (capacidad máxima: "
-                    + aula.getCapacidadMaxima() + ", ocupadas: " + matriculasActivas + ")");
-        }
-
+        // Valida y descuenta el cupo en la tabla "vacante" (lanza excepción si no hay disponibles)
+        vacanteService.ocupar(aula);
 
         List<Concepto> conceptos = conceptoRepository
                 .findByAnioAcademicoCodAnioAcademicoAndEstadoTrueOrderByOrdenPagoAsc(anio.getCodAnioAcademico());
@@ -73,7 +68,6 @@ public class MatriculaService {
             throw new Exception("No existen conceptos de pago activos para el año académico " + anio.getAnio()
                     + ". No se puede matricular sin un tarifario configurado.");
         }
-
 
         Matricula matricula = new Matricula();
         matricula.setAlumno(alumno);
@@ -84,7 +78,6 @@ public class MatriculaService {
         matricula.setUsuarioRegistro(usuarioRegistro);
         matricula = matriculaRepository.save(matricula);
 
-
         for (Concepto concepto : conceptos) {
             Cuota cuota = new Cuota();
             cuota.setMatricula(matricula);
@@ -94,12 +87,13 @@ public class MatriculaService {
             cuotaRepository.save(cuota);
         }
 
+        // Deja la deuda inicial ya calculada y persistida
+        deudaService.recalcularDeuda(matricula);
 
         auditoriaService.registrar(
                 usuarioRegistro, "Matrícula", "matricula", "MATRICULA", matricula.getCodMatricula(),
                 (Object) null, matricula, request
         );
-
 
         return matricula;
     }
